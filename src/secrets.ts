@@ -49,22 +49,16 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     let pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     await this.client.createSecret(this.data.owner, this.data.repo, { name, data, pull_request: pullRequest });
     this.refresh();
   }
 
-  async editSecret(name: string) {
-    if (!this.client || !this.data) {
+  async editSecret(secret: Secret) {
+    if (!this.data) {
       vscode.window.showInformationMessage("Please select a Drone CI/CD server and a repository");
       return;
     }
-
-    const newName =
-      (await vscode.window.showInputBox({
-        prompt: "Secret name",
-        value: name,
-        ignoreFocusOut: true,
-      })) || name;
 
     const data = await vscode.window.showInputBox({
       prompt: "Secret value",
@@ -77,9 +71,9 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     let pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
-    await this.client.updateSecret(this.data.owner, this.data.repo, name, {
-      name: newName,
+    await this.client.updateSecret(this.data.owner, this.data.repo, secret.label, {
       data,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       pull_request: pullRequest,
     });
     this.refresh();
@@ -92,11 +86,11 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     }
   }
 
-  refresh(client?: any, data?: RepoInfo) {
-    if (client) {
+  refresh(client?: any, data?: RepoInfo | null) {
+    if (client !== undefined) {
       this.client = client;
     }
-    if (data) {
+    if (data !== undefined) {
       this.data = data;
     }
     this._onDidChangeTreeData.fire();

@@ -38,7 +38,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     const label = await vscode.window.showInputBox({
       placeHolder: "Server label",
       prompt: "Please specify Drone CI server label (optional)",
-      value: "",
+      value: url.replace("https://", ""),
       ignoreFocusOut: true,
     });
 
@@ -63,14 +63,62 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 
     let server: ServerInfo = {
       id: this.servers.length,
-      url: url.replace(/\\+$/, ""),
-      token: token || "",
-      label: label || "",
+      url: url.replace(/\/+$/, ""),
+      token: token,
+      label: label || url.replace("https://", ""),
     };
     servers.push(server);
 
     await this.context.secrets.store("servers", JSON.stringify(servers));
     vscode.window.showInformationMessage(`You have successfully added a Drone CI server`);
+    this.refresh();
+  }
+
+  async editServer(server: Server) {
+    let servers: ServerInfo[] = [];
+
+    const url = await vscode.window.showInputBox({
+      placeHolder: "https://drone.domain.name",
+      prompt: "Please specify Drone CI server address",
+      value: server.url,
+      ignoreFocusOut: true,
+    });
+    if (!url) {
+      vscode.window.showWarningMessage(`You have not entered Drone CI server address`);
+      return;
+    }
+
+    const label = await vscode.window.showInputBox({
+      placeHolder: "Server label",
+      prompt: "Please specify Drone CI server label (optional)",
+      value: server.label?.toString(),
+      ignoreFocusOut: true,
+    });
+
+    servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+    servers = servers.filter((server: ServerInfo) => server.url !== url);
+
+    const token = await vscode.window.showInputBox({
+      placeHolder: "API key",
+      prompt: "Specify Drone CI server API key",
+      value: server.token,
+      ignoreFocusOut: true,
+    });
+    if (!token) {
+      vscode.window.showWarningMessage(`You have not entered Drone CI server token`);
+      return;
+    }
+
+    let serverNew: ServerInfo = {
+      id: this.servers.length,
+      url: url.replace(/\/+$/, ""),
+      token: token,
+      label: label || url.replace("https://", ""),
+    };
+    servers.push(serverNew);
+
+    await this.context.secrets.store("servers", JSON.stringify(servers));
+    vscode.window.showInformationMessage(`You have successfully updated your Drone CI server`);
     this.refresh();
   }
 
@@ -98,7 +146,12 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 
   async getServers() {
     this.servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
-    return this.servers.map((s) => new Server(s));
+    if (this.servers.length > 0) {
+      return this.servers.map((s) => new Server(s));
+    } else {
+      vscode.commands.executeCommand("setContext", "hasServerSelected", false);
+      return [];
+    }
   }
 }
 

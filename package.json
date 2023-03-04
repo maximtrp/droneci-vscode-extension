@@ -1,15 +1,18 @@
 {
   "name": "drone-ci",
   "displayName": "Drone CI",
-  "description": "Drone CI extension",
-  "version": "0.0.1",
+  "description": "Manage your Drone CI servers easily",
+  "version": "1.0.0",
   "publisher": "maximtrp",
-  "author": {"name": "Maksim Terpilovskii", "url": "https://github.com/maximtrp"},
+  "author": {
+    "name": "Maksim Terpilovskii",
+    "url": "https://github.com/maximtrp"
+  },
   "homepage": "https://github.com/maximtrp/droneci-vscode-extension",
   "repository": {
-		"type": "git",
-		"url": "https://github.com/maximtrp/droneci-vscode-extension"
-	},
+    "type": "git",
+    "url": "https://github.com/maximtrp/droneci-vscode-extension"
+  },
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.60.0"
@@ -37,7 +40,8 @@
         },
         {
           "id": "drone-ci-repos",
-          "name": "Repos"
+          "name": "Repos",
+          "visibility": "collapsed"
         },
         {
           "id": "drone-ci-builds",
@@ -56,6 +60,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "drone-ci-servers",
+        "contents": "Please add a Drone CI server to use this extension.\n[Add a Server](command:drone-ci.addServer)\nYour data will be kept by VSCode Secret Storage and will not be sent anywhere or synced."
+      }
+    ],
     "commands": [
       {
         "command": "drone-ci.addServer",
@@ -66,122 +76,191 @@
       {
         "command": "drone-ci.editServer",
         "title": "Edit",
-        "icon": "$(edit)",
-        "category": "Drone CI"
+        "icon": "$(edit)"
       },
       {
         "command": "drone-ci.deleteServer",
         "title": "Delete",
-        "icon": "$(trash)",
-        "category": "Drone CI"
+        "icon": "$(trash)"
       },
       {
         "command": "drone-ci.gotoServer",
         "title": "Go to Server",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
+        "icon": "$(link-external)"
       },
       {
         "command": "drone-ci.refreshRepos",
         "title": "Refresh Repositories",
         "icon": "$(refresh)",
-        "category": "Drone CI"
+        "enablement": "hasServerSelected"
+      },
+      {
+        "command": "drone-ci.gotoBuildPage",
+        "title": "Go to Build Page",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "drone-ci.gotoBuildComparePage",
+        "title": "Go to Git Compare Page",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "drone-ci.gotoGitRepoPage",
+        "title": "Go to Repo Page in Git",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "drone-ci.gotoRepoPage",
+        "title": "Go to Repo Page in Drone",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "drone-ci.disableRepo",
+        "title": "Disable",
+        "icon": "$(close)"
+      },
+      {
+        "command": "drone-ci.enableRepo",
+        "title": "Enable",
+        "icon": "$(check)"
+      },
+      {
+        "command": "drone-ci.repairRepo",
+        "title": "Repair",
+        "icon": "$(wrench)"
+      },
+      {
+        "command": "drone-ci.updateRepo",
+        "title": "Update",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "drone-ci.gotoRepoBranchesPage",
+        "title": "Go to Branches Page",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "drone-ci.gotoRepoDeploymentsPage",
+        "title": "Go to Deployments Page",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "drone-ci.gotoRepoSettingsPage",
+        "title": "Go to Settings Page",
+        "icon": "$(link-external)"
       },
       {
         "command": "drone-ci.refreshBuilds",
         "title": "Refresh Builds",
         "icon": "$(refresh)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
-        "command": "drone-ci.gotoBuildPage",
-        "title": "Go to Build Page",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
+        "command": "drone-ci.loadMoreBuilds",
+        "title": "Load More Builds",
+        "icon": "$(refresh)"
       },
       {
-        "command": "drone-ci.gotoBuildComparePage",
-        "title": "Go to Git Compare Page",
-        "icon": "$(git-compare)",
-        "category": "Drone CI"
-      },
-      {
-        "command": "drone-ci.gotoGitRepoPage",
-        "title": "Go to Repo Page in Git",
-        "icon": "$(git-branch)",
-        "category": "Drone CI"
-      },
-      {
-        "command": "drone-ci.gotoRepoPage",
-        "title": "Go to Repo Page in Drone",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
-      },
-      {
-        "command": "drone-ci.gotoRepoBranchesPage",
-        "title": "Go to Branches Page",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
-      },
-      {
-        "command": "drone-ci.gotoRepoDeploymentsPage",
-        "title": "Go to Deployments Page",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
-      },
-      {
-        "command": "drone-ci.gotoRepoSettingsPage",
-        "title": "Go to Settings Page",
-        "icon": "$(link-external)",
-        "category": "Drone CI"
+        "command": "drone-ci.triggerBuild",
+        "title": "Add a Build",
+        "icon": "$(add)",
+        "enablement": "hasBuilds"
       },
       {
         "command": "drone-ci.viewBuildStepLog",
         "title": "Build Step Log",
-        "icon": "$(open-preview)",
-        "category": "Drone CI"
+        "icon": "$(open-preview)"
       },
       {
         "command": "drone-ci.viewBuildInfo",
         "title": "Build Info",
-        "icon": "$(open-preview)",
-        "category": "Drone CI"
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "drone-ci.approveBuild",
+        "title": "Approve",
+        "icon": "$(check)"
+      },
+      {
+        "command": "drone-ci.declineBuild",
+        "title": "Decline",
+        "icon": "$(close)"
+      },
+      {
+        "command": "drone-ci.promoteBuild",
+        "title": "Promote",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "drone-ci.cancelBuild",
+        "title": "Cancel",
+        "icon": "$(close)"
+      },
+      {
+        "command": "drone-ci.restartBuild",
+        "title": "Restart",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "drone-ci.triggerCron",
+        "title": "Trigger Cron Job",
+        "icon": "$(run)"
       },
       {
         "command": "drone-ci.refreshCrons",
         "title": "Refresh Cron Jobs",
         "icon": "$(refresh)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
         "command": "drone-ci.gotoCronPage",
         "title": "Go to Cron Jobs Page",
         "icon": "$(link-external)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
         "command": "drone-ci.refreshSecrets",
         "title": "Refresh Secrets",
         "icon": "$(refresh)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
         "command": "drone-ci.addSecret",
         "title": "Add a Secret",
         "icon": "$(add)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
         "command": "drone-ci.gotoSecretsPage",
         "title": "Go to Secrets Page",
         "icon": "$(link-external)",
-        "category": "Drone CI"
+        "enablement": "hasRepoSelected"
       },
       {
         "command": "drone-ci.deleteSecret",
         "title": "Delete a Secret",
-        "icon": "$(trash)",
-        "category": "Drone CI"
+        "icon": "$(trash)"
+      },
+      {
+        "command": "drone-ci.editSecret",
+        "title": "Edit a Secret",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "drone-ci.deleteCron",
+        "title": "Delete a Cron Job",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "drone-ci.editCron",
+        "title": "Edit a Cron Job",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "drone-ci.addCron",
+        "title": "Add a Cron Job",
+        "icon": "$(add)",
+        "enablement": "hasRepoSelected"
       }
     ],
     "submenus": [
@@ -219,6 +298,11 @@
           "group": "navigation"
         },
         {
+          "command": "drone-ci.triggerBuild",
+          "when": "view == drone-ci-builds",
+          "group": "navigation"
+        },
+        {
           "command": "drone-ci.refreshSecrets",
           "when": "view == drone-ci-secrets",
           "group": "navigation"
@@ -235,6 +319,11 @@
         },
         {
           "command": "drone-ci.refreshCrons",
+          "when": "view == drone-ci-cron",
+          "group": "navigation"
+        },
+        {
+          "command": "drone-ci.addCron",
           "when": "view == drone-ci-cron",
           "group": "navigation"
         },
@@ -261,41 +350,86 @@
           "group": "descructive"
         },
         {
+          "command": "drone-ci.enableRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_inactive",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.disableRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_active",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.repairRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_active",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.updateRepo",
+          "when": "false",
+          "group": "actions"
+        },
+        {
           "command": "drone-ci.gotoRepoPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoGitRepoPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoBranchesPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoDeploymentsPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoSettingsPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
+        },
+        {
+          "command": "drone-ci.approveBuild",
+          "when": "view == drone-ci-builds && viewItem == build_blocked",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.declineBuild",
+          "when": "view == drone-ci-builds && viewItem == build_blocked",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.cancelBuild",
+          "when": "view == drone-ci-builds && viewItem == build_running",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.restartBuild",
+          "when": "view == drone-ci-builds && viewItem =~ /^build/",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.promoteBuild",
+          "when": "view == drone-ci-builds && viewItem == build_success",
+          "group": "actions"
         },
         {
           "command": "drone-ci.viewBuildInfo",
-          "when": "view == drone-ci-builds && viewItem == build",
+          "when": "view == drone-ci-builds && viewItem =~ /^build/",
           "group": "inline"
         },
         {
           "command": "drone-ci.gotoBuildPage",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         },
         {
           "command": "drone-ci.viewBuildInfo",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         },
         {
           "command": "drone-ci.gotoBuildComparePage",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         },
         {
           "command": "drone-ci.viewBuildStepLog",
@@ -303,8 +437,28 @@
           "group": "inline"
         },
         {
+          "command": "drone-ci.editSecret",
+          "when": "view == drone-ci-secrets && viewItem != none",
+          "group": "inline"
+        },
+        {
           "command": "drone-ci.deleteSecret",
           "when": "view == drone-ci-secrets && viewItem != none",
+          "group": "inline"
+        },
+        {
+          "command": "drone-ci.editCron",
+          "when": "view == drone-ci-cron && viewItem == cron",
+          "group": "inline"
+        },
+        {
+          "command": "drone-ci.triggerCron",
+          "when": "view == drone-ci-cron && viewItem == cron",
+          "group": "inline"
+        },
+        {
+          "command": "drone-ci.deleteCron",
+          "when": "view == drone-ci-cron && viewItem == cron",
           "group": "inline"
         },
         {
@@ -322,38 +476,83 @@
       ],
       "drone-ci.repo": [
         {
+          "command": "drone-ci.enableRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_inactive",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.disableRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_active",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.repairRepo",
+          "when": "view == drone-ci-repos && viewItem == repo_active",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.updateRepo",
+          "when": "false",
+          "group": "actions"
+        },
+        {
           "command": "drone-ci.gotoRepoPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoGitRepoPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoBranchesPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoDeploymentsPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
           "command": "drone-ci.gotoRepoSettingsPage",
-          "when": "view == drone-ci-repos && viewItem == repo"
+          "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         }
       ],
       "drone-ci.build": [
         {
+          "command": "drone-ci.approveBuild",
+          "when": "view == drone-ci-builds && viewItem == build_blocked",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.declineBuild",
+          "when": "view == drone-ci-builds && viewItem == build_blocked",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.restartBuild",
+          "when": "view == drone-ci-builds && viewItem =~ /^build/",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.cancelBuild",
+          "when": "view == drone-ci-builds && viewItem == build_running",
+          "group": "actions"
+        },
+        {
+          "command": "drone-ci.promoteBuild",
+          "when": "view == drone-ci-builds && viewItem == build_success",
+          "group": "actions"
+        },
+        {
           "command": "drone-ci.gotoBuildPage",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         },
         {
           "command": "drone-ci.viewBuildInfo",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         },
         {
           "command": "drone-ci.gotoBuildComparePage",
-          "when": "view == drone-ci-builds && viewItem == build"
+          "when": "view == drone-ci-builds && viewItem =~ /^build/"
         }
       ],
       "drone-ci.server": [
@@ -372,14 +571,9 @@
           "when": "view == drone-ci-servers",
           "group": "destructive"
         }
-      ],
-      "commandPalette": [
+      ], "commandPalette": [
         {
           "command": "drone-ci.editServer",
-          "when": "false"
-        },
-        {
-          "command": "drone-ci.gotoServer",
           "when": "false"
         },
         {
@@ -387,7 +581,43 @@
           "when": "false"
         },
         {
+          "command": "drone-ci.gotoServer",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.refreshRepos",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.gotoBuildPage",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.gotoBuildComparePage",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.gotoGitRepoPage",
+          "when": "false"
+        },
+        {
           "command": "drone-ci.gotoRepoPage",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.disableRepo",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.enableRepo",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.repairRepo",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.updateRepo",
           "when": "false"
         },
         {
@@ -403,19 +633,15 @@
           "when": "false"
         },
         {
-          "command": "drone-ci.gotoGitRepoPage",
+          "command": "drone-ci.refreshBuilds",
           "when": "false"
         },
         {
-          "command": "drone-ci.viewBuildInfo",
+          "command": "drone-ci.loadMoreBuilds",
           "when": "false"
         },
         {
-          "command": "drone-ci.gotoBuildPage",
-          "when": "false"
-        },
-        {
-          "command": "drone-ci.gotoBuildComparePage",
+          "command": "drone-ci.triggerBuild",
           "when": "false"
         },
         {
@@ -423,19 +649,88 @@
           "when": "false"
         },
         {
+          "command": "drone-ci.viewBuildInfo",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.approveBuild",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.declineBuild",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.promoteBuild",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.cancelBuild",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.restartBuild",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.triggerCron",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.refreshCrons",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.gotoCronPage",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.refreshSecrets",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.addSecret",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.gotoSecretsPage",
+          "when": "false"
+        },
+        {
           "command": "drone-ci.deleteSecret",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.editSecret",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.deleteCron",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.editCron",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.addCron",
           "when": "false"
         }
       ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "test-compile": "tsc -p ./",
+    "deploy": "vsce publish --yarn"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
@@ -446,6 +741,7 @@
     "@typescript-eslint/parser": "^5.53.0",
     "@vscode/test-electron": "^2.2.3",
     "drone-node": "^2.2.0",
+    "esbuild": "^0.17.10",
     "eslint": "^8.34.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",

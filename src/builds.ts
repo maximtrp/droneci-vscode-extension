@@ -7,13 +7,22 @@ interface RepoInfo {
 }
 
 interface BuildInfo {
+  after: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  author_login: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  author_name: string;
+  event: string;
+  finished: number;
+  message: string;
+  link: string;
   number: number;
   status: string;
-  target: string;
-  message: string;
-  trigger: string;
-  link: string;
+  sender: string;
   stages: StageInfo[];
+  started: number;
+  target: string;
+  trigger: string;
 }
 
 interface StageInfo {
@@ -31,9 +40,18 @@ interface Log {
   out: string;
 }
 
+interface BuildIcon {
+  icon: string;
+  color: string;
+}
+
 export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | None> {
   private client: any | null = null;
   public data: RepoInfo | null = null;
+  public builds: BuildInfo[] = [];
+  public page: number = 1;
+  private recentPageSuccess: boolean = true;
+  private fastRefresh: boolean = false;
 
   constructor() {}
 
@@ -42,11 +60,11 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
   >();
   readonly onDidChangeTreeData: vscode.Event<Build | undefined | null | void> = this._onDidChangeTreeData.event;
 
-  refresh(client?: any, data?: RepoInfo) {
-    if (client) {
+  refresh(client?: any, data?: RepoInfo | null) {
+    if (client !== undefined) {
       this.client = client;
     }
-    if (data) {
+    if (data !== undefined) {
       this.data = data;
     }
     this._onDidChangeTreeData.fire();
@@ -56,16 +74,16 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     return element;
   }
 
-  async getChildren(element?: Build): Promise<Build[] | Step[] | None[]> {
+  async getChildren(build?: Build): Promise<Build[] | Step[] | LoadMore[] | None[]> {
     if (this.client && this.data) {
-      if (element) {
-        let buildInfo: BuildInfo | null = await this.client.getBuild(this.data.owner, this.data.repo, element.build);
+      if (build) {
+        let buildInfo: BuildInfo | null = await this.client.getBuild(this.data.owner, this.data.repo, build.number);
 
         if (buildInfo && buildInfo.stages && buildInfo.stages[0].steps) {
           const stepsInfo: { step: StepInfo; stage: StageInfo; build: number }[] = buildInfo.stages
             .map((stage) =>
               stage.steps.map((step) => ({
-                build: element.build,
+                build: build.number,
                 stage,
                 step,
               }))
@@ -78,11 +96,14 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         }
         return [new None("Nothing found")];
       } else {
-        let builds: BuildInfo[] = (await this.client.getBuilds(this.data.owner, this.data.repo, 1, 1000)) || [];
+        if (!this.fastRefresh) {
+          await this.getBuilds(1, true);
+        }
+        this.fastRefresh = false;
         let owner: string = this.data.owner;
         let repo: string = this.data.repo;
 
-        const results = builds.map(
+        let buildItems: (Build | LoadMore)[] = this.builds.map(
           (buildInfo: BuildInfo) =>
             new Build(buildInfo, {
               baseURL: this.client._axios.defaults.baseURL,
@@ -90,15 +111,41 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
               repo,
             })
         );
-        if (results.length > 0) {
-          return results;
+        if (buildItems.length > 0) {
+          vscode.commands.executeCommand("setContext", "hasBuilds", true);
+          if (this.recentPageSuccess) {
+            buildItems.push(new LoadMore());
+          }
+          return buildItems;
         } else {
-          return [new None("Nothing found")];
+          return [new None("No builds found")];
         }
       }
     } else {
       return [new None("Select server and repository to view builds")];
     }
+  }
+
+  async getBuilds(page: number, clean?: boolean) {
+    if (this.data) {
+      if (clean) {
+        this.builds = [];
+      }
+      let builds: BuildInfo[] = await this.client.getBuilds(this.data.owner, this.data.repo, page);
+      if (builds.length > 0) {
+        this.page = page;
+        this.recentPageSuccess = builds.length < 25 ? false : true;
+        this.builds.push(...builds);
+      } else {
+        this.recentPageSuccess = false;
+      }
+    }
+  }
+
+  async loadMore() {
+    await this.getBuilds(this.page + 1);
+    this.fastRefresh = true;
+    this.refresh();
   }
 
   async getStepLog(step: Step): Promise<string | undefined> {
@@ -109,9 +156,9 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     return undefined;
   }
 
-  async getBuildInfo(element: Build): Promise<string | undefined> {
+  async getBuildInfo(build: Build): Promise<string | undefined> {
     if (this.data) {
-      let info = await this.client.getBuild(this.data.owner, this.data.repo, element.build);
+      let info = await this.client.getBuild(this.data.owner, this.data.repo, build.number);
       return JSON.stringify(info, null, 2);
     }
     return undefined;
@@ -124,7 +171,7 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         vscode.window.showTextDocument(a, 1, false);
       });
     } else {
-      vscode.window.showInformationMessage("Build step log could not be loaded");
+      vscode.window.showWarningMessage("Build step log could not be loaded");
     }
   }
   async viewBuildInfo(build: Build) {
@@ -137,12 +184,108 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
       vscode.window.showInformationMessage("Build info could not be loaded");
     }
   }
+  async cancelBuild(build: Build) {
+    if (this.data) {
+      try {
+        await this.client.cancelBuild(this.data.owner, this.data.repo, build.number);
+      } catch (error: any) {
+        vscode.window.showWarningMessage(`Build ${build.number} was not cancelled. ${error.message}`);
+      }
+    }
+    this.refresh();
+  }
+  async restartBuild(build: Build) {
+    if (this.data) {
+      try {
+        await this.client.retryBuild(this.data.owner, this.data.repo, build.number);
+      } catch (error: any) {
+        vscode.window.showWarningMessage(`Build ${build.number} was not restarted. ${error.message}`);
+      }
+    }
+    this.refresh();
+  }
+
+  async triggerBuild() {
+    if (this.data) {
+      let branch: string | undefined = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
+        placeHolder: "Branch name",
+        title: "Specify branch to trigger build on",
+        prompt: "Example: dev or master",
+      });
+      if (branch) {
+        let commit: string | undefined = await vscode.window.showInputBox({
+          ignoreFocusOut: true,
+          title: "Specify commit (optional)",
+          prompt: "Leave blank to trigger build based on the latest commit",
+        });
+        let result = await this.client.triggerBuild(this.data.owner, this.data.repo, {
+          branch,
+          commit: commit || this.builds[0].after,
+        });
+        if (!result) {
+          vscode.window.showWarningMessage(
+            'Build was not triggered. Maybe you need to add "custom" event to trigger section of your pipeline. Refer to https://docs.drone.io/api/builds/build_create/ for more information.'
+          );
+        } else {
+          this.refresh();
+        }
+      }
+    } else {
+      vscode.window.showInformationMessage(`Please select Drone CI server and repository to trigger build`);
+    }
+  }
+
+  async promoteBuild(build: Build) {
+    if (this.data) {
+      let target: string | undefined = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
+        placeHolder: "Target name",
+        title: "Specify target to promote build to",
+        prompt: "Example: development or production",
+      });
+      if (!target) {
+        return;
+      }
+      let params: object = {};
+      let paramsJSON: string | undefined = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
+        title: "Enter params as valid JSON (optional)",
+      });
+
+      if (paramsJSON) {
+        try {
+          params = JSON.parse(paramsJSON);
+        } catch (e) {
+          vscode.window.showInformationMessage("Parameters could not be parsed");
+        }
+      }
+
+      let result = await this.client.promoteBuild(this.data.owner, this.data.repo, build.number, target, params);
+      if (!result) {
+        vscode.window.showWarningMessage("Build was not promoted");
+      } else {
+        this.refresh();
+      }
+    } else {
+      vscode.window.showInformationMessage(`Please select Drone CI server and repository to trigger build`);
+    }
+  }
 }
 
 class None extends vscode.TreeItem {
   constructor(label: string) {
     super(label || "No builds found", vscode.TreeItemCollapsibleState.None);
     this.iconPath = new vscode.ThemeIcon("info");
+  }
+}
+
+class LoadMore extends vscode.TreeItem {
+  constructor() {
+    super("Load more...", vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("sync");
+    this.contextValue = "loadmore";
+    this.command = { title: "Load More", command: "drone-ci.loadMoreBuilds" };
   }
 }
 
@@ -164,22 +307,50 @@ class Step extends vscode.TreeItem {
 }
 
 class Build extends vscode.TreeItem {
-  build: number;
+  number: number;
   compareURL: string;
   url: string;
 
   constructor(build: BuildInfo, repo: RepoInfo) {
-    let label = `Build ${build.number}: ${build.message.trim()}`;
+    let label = `#${build.number}: ${build.message.trim()}`;
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
-    this.build = build.number;
+    this.number = build.number;
     this.compareURL = build.link;
     this.url = `${repo.baseURL}/${repo.owner}/${repo.repo}/${build.number}`;
-    this.description = `(by ${build.trigger} on ${build.target})`;
-    this.tooltip = `${label} ${this.description}`;
-    this.contextValue = "build";
-    this.iconPath =
-      build.status === "success"
-        ? new vscode.ThemeIcon("pass", new vscode.ThemeColor("charts.green"))
-        : new vscode.ThemeIcon("error", new vscode.ThemeColor("charts.red"));
+    this.description = `(by ${build.sender} on "${build.target}")`;
+    this.tooltip = [
+      `${label} ${this.description}`,
+      `${build.event.toUpperCase()} ${build.after.slice(0, 8)} to "${build.target}"\n`,
+      `Status: ${build.status}`,
+      build.started ? `Started: ${new Date(build.started * 1000).toLocaleString()}` : null,
+      build.finished ? `Finished: ${new Date(build.finished * 1000).toLocaleString()}` : null,
+      `Author: ${build.author_login} (${build.author_name})`,
+    ]
+      .filter((i) => !!i)
+      .join("\n");
+    this.contextValue = `build_${build.status}`;
+    this.iconPath = this.selectIcon(build);
+  }
+
+  selectIcon(build: BuildInfo): vscode.ThemeIcon {
+    let presets: { [status: string]: BuildIcon } = {
+      success: { icon: "pass", color: "charts.green" },
+      error: { icon: "error", color: "charts.red" },
+      failure: { icon: "error", color: "charts.red" },
+      pending: { icon: "sync~spin", color: "charts.blue" },
+      killed: { icon: "stop-circle", color: "charts.red" },
+      running: { icon: "run", color: "charts.green" },
+      fallback: { icon: "pass", color: "charts.yellow" },
+    };
+    let selectedPreset: BuildIcon = presets[build.status] || presets.fallback;
+    if (build.event === "custom" && build.status !== "running") {
+      selectedPreset.icon = "repl";
+    } else if (build.event === "promote" && build.status !== "running") {
+      selectedPreset.icon = "rocket";
+    } else if (build.event === "cron" && build.status !== "running") {
+      selectedPreset.icon = "calendar";
+    }
+
+    return new vscode.ThemeIcon(selectedPreset.icon, new vscode.ThemeColor(selectedPreset.color));
   }
 }
