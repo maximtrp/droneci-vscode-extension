@@ -17,3 +17,7 @@ and cron jobs.
 ## Installation
 
 This extension is available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=maximtrp.drone-ci) for Visual Studio Code.
+
+## Copyright
+
+[Drone CI](https://www.drone.io/) [icon and logo](resources/) by [Harness Inc.](https://www.harness.io/) are licensed under [CC BY-NC-ND 4.0](https://github.com/drone/brand/blob/master/LICENSE).
