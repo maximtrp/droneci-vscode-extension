@@ -1,5 +1,7 @@
 # Drone CI Extension for Visual Studio Code
 
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/maximtrp/droneci-vscode-extension/main.yml)
+
 This extension integrates Drone CI into VS Code. It allows you to quickly browse and manage your repos, builds, secrets
 and cron jobs.
 
