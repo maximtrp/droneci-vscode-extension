@@ -11,6 +11,7 @@ jobs:
     env:
       DRONE_TOKEN: ${{ secrets.DRONE_TOKEN }}
       DRONE_SERVER: ${{ secrets.DRONE_SERVER }}
+      DRONE_TESTREPO: ${{ secrets.DRONE_TESTREPO }}
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
