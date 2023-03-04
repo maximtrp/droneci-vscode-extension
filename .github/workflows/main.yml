@@ -8,6 +8,9 @@ on:
 
 jobs:
   build:
+    env:
+      DRONE_TOKEN: ${{ secrets.DRONE_TOKEN }}
+      DRONE_SERVER: ${{ secrets.DRONE_SERVER }}
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
@@ -16,9 +19,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
     - name: Install Node.js
-      env:
-        DRONE_TOKEN: ${{ secrets.DRONE_TOKEN }}
-        DRONE_SERVER: ${{ secrets.DRONE_SERVER }}
       uses: actions/setup-node@v3
       with:
         node-version: 16.x
