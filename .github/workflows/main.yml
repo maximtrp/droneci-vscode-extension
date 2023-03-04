@@ -29,7 +29,10 @@ jobs:
     - run: npm test
       if: runner.os != 'Linux'
     - name: Publish
+      run: |
+        npm install -g @vscode/vsce
+        npm install -g yarn
+        npm run deploy
       if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
-      run: npm run deploy
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
