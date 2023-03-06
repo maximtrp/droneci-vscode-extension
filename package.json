@@ -2,7 +2,7 @@
   "name": "drone-ci",
   "displayName": "Drone CI",
   "description": "Manage your Drone CI servers easily",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "maximtrp",
   "author": {
     "name": "Maksim Terpilovskii",
@@ -40,8 +40,7 @@
         },
         {
           "id": "drone-ci-repos",
-          "name": "Repos",
-          "visibility": "collapsed"
+          "name": "Repos"
         },
         {
           "id": "drone-ci-builds",
@@ -571,7 +570,8 @@
           "when": "view == drone-ci-servers",
           "group": "destructive"
         }
-      ], "commandPalette": [
+      ],
+      "commandPalette": [
         {
           "command": "drone-ci.editServer",
           "when": "false"

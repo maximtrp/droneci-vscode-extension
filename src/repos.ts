@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { dateTimeFmt } from "./helpers";
 
 interface RepoInfo {
   slug: string;
@@ -39,7 +40,6 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
       let repos: RepoInfo[] = [];
       try {
         repos = (await this.client.getRepos()) || [];
-        console.log(repos);
         if (repos.length > 0) {
           repos = repos.sort((i, j) => (i.slug < j.slug ? -1 : 1));
           return repos.map(
@@ -66,35 +66,32 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
       (await vscode.window.showInformationMessage("Do you want to remove this repo?", "Yes", "No")) === "Yes";
 
     if (this.client) {
-      let result = await this.client.disableRepo(repo.owner, repo.name, remove);
-      if (!result) {
-        vscode.window.showWarningMessage("Repository was not disabled.");
-      } else {
-        vscode.window.showInformationMessage("Repository was disabled.");
+      try {
+        await this.client.disableRepo(repo.owner, repo.name, remove);
         this.refresh();
+      } catch (e) {
+        vscode.window.showWarningMessage("Repository was not disabled.");
       }
     }
   }
   async enableRepo(repo: Repo) {
     if (this.client) {
-      let result = await this.client.enableRepo(repo.owner, repo.name);
-      if (!result) {
-        vscode.window.showWarningMessage("Repository was not enabled.");
-      } else {
-        vscode.window.showInformationMessage("Repository was enabled.");
+      try {
+        await this.client.enableRepo(repo.owner, repo.name);
         this.refresh();
+      } catch (e) {
+        vscode.window.showWarningMessage("Repository was not enabled.");
       }
     }
   }
 
   async repairRepo(repo: Repo) {
     if (this.client) {
-      let result = await this.client.repairRepo(repo.owner, repo.name);
-      if (!result) {
-        vscode.window.showWarningMessage("Repository repair was not run.");
-      } else {
-        vscode.window.showInformationMessage("Repository repair was run.");
+      try {
+        await this.client.repairRepo(repo.owner, repo.name);
         this.refresh();
+      } catch (e) {
+        vscode.window.showWarningMessage("Repository repair was not run.");
       }
     }
   }
@@ -124,7 +121,7 @@ export class Repo extends vscode.TreeItem {
       `Private: ${repo.private}`,
       `Trusted: ${repo.trusted}`,
       `Visibility: ${repo.visibility}`,
-      `Updated: ${new Date(repo.updated * 1000).toLocaleString()}`,
+      `Updated: ${dateTimeFmt.format(repo.updated * 1000)}`,
     ].join("\n");
     this.contextValue = "repo" + (repo.active ? "_active" : "_inactive");
     this.name = repo.name;

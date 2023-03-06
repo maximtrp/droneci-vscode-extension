@@ -43,15 +43,24 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
       ignoreFocusOut: true,
     });
     if (!data) {
+      vscode.window.showInformationMessage("Secret was not created due to its empty value");
       return;
     }
 
     let pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    await this.client.createSecret(this.data.owner, this.data.repo, { name, data, pull_request: pullRequest });
-    this.refresh();
+    try {
+      await this.client.createSecret(this.data.owner, this.data.repo, {
+        name,
+        data,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        pull_request: pullRequest,
+      });
+      this.refresh();
+    } catch (error) {
+      vscode.window.showWarningMessage("Secret was not created.");
+    }
   }
 
   async editSecret(secret: Secret) {
@@ -71,18 +80,25 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     let pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
-    await this.client.updateSecret(this.data.owner, this.data.repo, secret.label, {
-      data,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      pull_request: pullRequest,
-    });
-    this.refresh();
+    try {
+      await this.client.updateSecret(this.data.owner, this.data.repo, secret.label, {
+        data,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        pull_request: pullRequest,
+      });
+    } catch (e) {
+      vscode.window.showWarningMessage("Secret was not updated.");
+    }
   }
 
   async deleteSecret(secret: Secret) {
     if (this.data) {
-      await this.client.deleteSecret(this.data.owner, this.data.repo, secret.label);
-      this.refresh();
+      try {
+        await this.client.deleteSecret(this.data.owner, this.data.repo, secret.label);
+        this.refresh();
+      } catch (e) {
+        vscode.window.showWarningMessage("Secret was not deleted.");
+      }
     }
   }
 

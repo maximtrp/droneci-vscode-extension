@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { dateTimeFmt } from "./helpers";
 
 interface RepoInfo {
   baseURL?: string;
@@ -131,12 +132,16 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
       if (clean) {
         this.builds = [];
       }
-      let builds: BuildInfo[] = await this.client.getBuilds(this.data.owner, this.data.repo, page);
-      if (builds.length > 0) {
-        this.page = page;
-        this.recentPageSuccess = builds.length < 25 ? false : true;
-        this.builds.push(...builds);
-      } else {
+      try {
+        let builds: BuildInfo[] = await this.client.getBuilds(this.data.owner, this.data.repo, page);
+        if (builds.length > 0) {
+          this.page = page;
+          this.recentPageSuccess = builds.length < 25 ? false : true;
+          this.builds.push(...builds);
+        } else {
+          this.recentPageSuccess = false;
+        }
+      } catch (e) {
         this.recentPageSuccess = false;
       }
     }
@@ -150,16 +155,24 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
 
   async getStepLog(step: Step): Promise<string | undefined> {
     if (this.data) {
-      let logs = await this.client.getLogs(this.data.owner, this.data.repo, step.build, step.stage, step.step);
-      return logs.map((log: Log) => log.out).join("");
+      try {
+        let logs = await this.client.getLogs(this.data.owner, this.data.repo, step.build, step.stage, step.step);
+        return logs.map((log: Log) => log.out).join("");
+      } catch (error) {
+        return undefined;
+      }
     }
     return undefined;
   }
 
   async getBuildInfo(build: Build): Promise<string | undefined> {
     if (this.data) {
-      let info = await this.client.getBuild(this.data.owner, this.data.repo, build.number);
-      return JSON.stringify(info, null, 2);
+      try {
+        let info = await this.client.getBuild(this.data.owner, this.data.repo, build.number);
+        return JSON.stringify(info, null, 2);
+      } catch (error) {
+        return undefined;
+      }
     }
     return undefined;
   }
@@ -188,21 +201,22 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     if (this.data) {
       try {
         await this.client.cancelBuild(this.data.owner, this.data.repo, build.number);
+        this.refresh();
       } catch (error: any) {
         vscode.window.showWarningMessage(`Build ${build.number} was not cancelled. ${error.message}`);
       }
     }
-    this.refresh();
   }
+
   async restartBuild(build: Build) {
     if (this.data) {
       try {
         await this.client.retryBuild(this.data.owner, this.data.repo, build.number);
+        this.refresh();
       } catch (error: any) {
         vscode.window.showWarningMessage(`Build ${build.number} was not restarted. ${error.message}`);
       }
     }
-    this.refresh();
   }
 
   async triggerBuild() {
@@ -219,16 +233,16 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
           title: "Specify commit (optional)",
           prompt: "Leave blank to trigger build based on the latest commit",
         });
-        let result = await this.client.triggerBuild(this.data.owner, this.data.repo, {
-          branch,
-          commit: commit || this.builds[0].after,
-        });
-        if (!result) {
+        try {
+          await this.client.triggerBuild(this.data.owner, this.data.repo, {
+            branch,
+            commit: commit || this.builds[0].after,
+          });
+          this.refresh();
+        } catch (e) {
           vscode.window.showWarningMessage(
             'Build was not triggered. Maybe you need to add "custom" event to trigger section of your pipeline. Refer to https://docs.drone.io/api/builds/build_create/ for more information.'
           );
-        } else {
-          this.refresh();
         }
       }
     } else {
@@ -261,11 +275,11 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         }
       }
 
-      let result = await this.client.promoteBuild(this.data.owner, this.data.repo, build.number, target, params);
-      if (!result) {
-        vscode.window.showWarningMessage("Build was not promoted");
-      } else {
+      try {
+        await this.client.promoteBuild(this.data.owner, this.data.repo, build.number, target, params);
         this.refresh();
+      } catch (e) {
+        vscode.window.showWarningMessage("Build was not promoted");
       }
     } else {
       vscode.window.showInformationMessage(`Please select Drone CI server and repository to trigger build`);
@@ -320,10 +334,11 @@ class Build extends vscode.TreeItem {
     this.description = `(by ${build.sender} on "${build.target}")`;
     this.tooltip = [
       `${label} ${this.description}`,
+      // EVENT COMMIT to TARGET
       `${build.event.toUpperCase()} ${build.after.slice(0, 8)} to "${build.target}"\n`,
       `Status: ${build.status}`,
-      build.started ? `Started: ${new Date(build.started * 1000).toLocaleString()}` : null,
-      build.finished ? `Finished: ${new Date(build.finished * 1000).toLocaleString()}` : null,
+      build.started ? `Started on ${dateTimeFmt.format(build.started * 1000)}` : null,
+      build.finished ? `Finished on ${dateTimeFmt.format(build.finished * 1000)}` : null,
       `Author: ${build.author_login} (${build.author_name})`,
     ]
       .filter((i) => !!i)

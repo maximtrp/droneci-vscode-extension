@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { dateTimeFmt } from "./helpers";
 
 interface RepoInfo {
   baseURL?: string;
@@ -44,12 +45,16 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
 
   async getChildren() {
     if (this.client && this.data) {
-      let crons = (await this.client.getCrons(this.data.owner, this.data.repo)) || [];
-      const results = crons.map((cron: CronInfo) => new Cron(cron));
-      if (results.length > 0) {
-        return results;
-      } else {
-        return [new None("No cron jobs found")];
+      try {
+        let crons = (await this.client.getCrons(this.data.owner, this.data.repo)) || [];
+        const results = crons.map((cron: CronInfo) => new Cron(cron));
+        if (results.length > 0) {
+          return results;
+        } else {
+          return [new None("No cron jobs found")];
+        }
+      } catch (error) {
+        return [new None("Error occurred while loading cron jobs")];
       }
     } else {
       return [new None("Select a server and a repository to view cron jobs")];
@@ -87,6 +92,7 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
       value: "@weekly",
     });
     if (!expr) {
+      vscode.window.showWarningMessage("Cron job was not created.");
       return;
     }
 
@@ -95,15 +101,20 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
       ignoreFocusOut: true,
     });
     if (!branch) {
+      vscode.window.showWarningMessage("Cron job was not created.");
       return;
     }
 
-    let result = await this.client.createCron(this.data.owner, this.data.repo, {
-      name,
-      expr,
-      branch,
-    });
-    this.refresh();
+    try {
+      await this.client.createCron(this.data.owner, this.data.repo, {
+        name,
+        expr,
+        branch,
+      });
+      this.refresh();
+    } catch (e) {
+      vscode.window.showWarningMessage("Cron job was not created.");
+    }
   }
 
   async editCron(cron: Cron) {
@@ -128,6 +139,7 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
       value: cron.expr,
     });
     if (!expr) {
+      vscode.window.showWarningMessage("Cron job was not updated.");
       return;
     }
 
@@ -137,40 +149,43 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
       value: cron.branch,
     });
     if (!branch) {
+      vscode.window.showWarningMessage("Cron job was not updated.");
       return;
     }
 
-    let result = await this.client.updateCron(this.data.owner, this.data.repo, cron.name, {
-      name,
-      expr,
-      branch,
-    });
-    if (!result) {
-      vscode.window.showWarningMessage("Cron job was not updated.");
-    } else {
-      vscode.window.showInformationMessage("Cron job was updated.");
+    try {
+      await this.client.updateCron(this.data.owner, this.data.repo, cron.name, {
+        name,
+        expr,
+        branch,
+      });
       this.refresh();
+    } catch (e) {
+      vscode.window.showWarningMessage("Cron job was not updated.");
     }
   }
 
   async triggerCron(cron: Cron) {
     if (this.data) {
-      let result = await this.client.executeCron(this.data.owner, this.data.repo, cron.name);
-      if (!result) {
+      try {
+        await this.client.executeCron(this.data.owner, this.data.repo, cron.name);
+        this.refresh();
+      } catch (error: any) {
         vscode.window.showWarningMessage(
           'Cron job was not triggered. Maybe you need to add "cron" event to trigger section of your pipeline. Refer to https://docs.drone.io/api/builds/build_create/ for more information.'
         );
-      } else {
-        vscode.window.showInformationMessage("Cron job was triggered.");
-        this.refresh();
       }
     }
   }
 
   async deleteCron(cron: Cron) {
     if (this.data) {
-      await this.client.deleteCron(this.data.owner, this.data.repo, cron.name);
-      this.refresh();
+      try {
+        await this.client.deleteCron(this.data.owner, this.data.repo, cron.name);
+        this.refresh();
+      } catch (error: any) {
+        vscode.window.showWarningMessage("Cron job was not deleted.");
+      }
     }
   }
 }
@@ -195,7 +210,7 @@ class Cron extends vscode.TreeItem {
     this.expr = cron.expr;
     this.branch = cron.branch;
     this.contextValue = "cron";
-    this.tooltip = [label, `\nNext: ${new Date(cron.next * 1000).toLocaleString()}`].join("\n");
+    this.tooltip = [label, `\nNext: ${dateTimeFmt.format(cron.next * 1000)}`].join("\n");
     this.iconPath = new vscode.ThemeIcon(
       "clock",
       cron.disabled ? new vscode.ThemeColor("disabledForeground") : undefined

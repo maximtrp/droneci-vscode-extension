@@ -14,9 +14,5 @@
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
   },
-  "include": [
-    "resources/*",
-    "src/**/*",
-    "index.d.ts" // declaration file path
-  ]
+  "include": ["resources/*", "src/**/*"]
 }
