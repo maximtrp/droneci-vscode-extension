@@ -2,7 +2,7 @@
   "name": "drone-ci",
   "displayName": "Drone CI",
   "description": "Manage your Drone CI servers easily",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "maximtrp",
   "author": {
     "name": "Maksim Terpilovskii",
@@ -176,12 +176,12 @@
         "icon": "$(open-preview)"
       },
       {
-        "command": "drone-ci.approveBuild",
+        "command": "drone-ci.approveBuildStage",
         "title": "Approve",
         "icon": "$(check)"
       },
       {
-        "command": "drone-ci.declineBuild",
+        "command": "drone-ci.declineBuildStage",
         "title": "Decline",
         "icon": "$(close)"
       },
@@ -389,19 +389,19 @@
           "when": "view == drone-ci-repos && viewItem =~ /^repo/"
         },
         {
-          "command": "drone-ci.approveBuild",
-          "when": "view == drone-ci-builds && viewItem == build_blocked",
-          "group": "actions"
+          "command": "drone-ci.approveBuildStage",
+          "when": "view == drone-ci-builds && viewItem == stage_blocked",
+          "group": "inline"
         },
         {
-          "command": "drone-ci.declineBuild",
-          "when": "view == drone-ci-builds && viewItem == build_blocked",
-          "group": "actions"
+          "command": "drone-ci.declineBuildStage",
+          "when": "view == drone-ci-builds && viewItem == stage_blocked",
+          "group": "inline"
         },
         {
           "command": "drone-ci.cancelBuild",
           "when": "view == drone-ci-builds && viewItem == build_running",
-          "group": "actions"
+          "group": "inline"
         },
         {
           "command": "drone-ci.restartBuild",
@@ -516,16 +516,6 @@
         }
       ],
       "drone-ci.build": [
-        {
-          "command": "drone-ci.approveBuild",
-          "when": "view == drone-ci-builds && viewItem == build_blocked",
-          "group": "actions"
-        },
-        {
-          "command": "drone-ci.declineBuild",
-          "when": "view == drone-ci-builds && viewItem == build_blocked",
-          "group": "actions"
-        },
         {
           "command": "drone-ci.restartBuild",
           "when": "view == drone-ci-builds && viewItem =~ /^build/",
@@ -645,19 +635,19 @@
           "when": "false"
         },
         {
+          "command": "drone-ci.declineBuildStage",
+          "when": "false"
+        },
+        {
+          "command": "drone-ci.approveBuildStage",
+          "when": "false"
+        },
+        {
           "command": "drone-ci.viewBuildStepLog",
           "when": "false"
         },
         {
           "command": "drone-ci.viewBuildInfo",
-          "when": "false"
-        },
-        {
-          "command": "drone-ci.approveBuild",
-          "when": "false"
-        },
-        {
-          "command": "drone-ci.declineBuild",
           "when": "false"
         },
         {

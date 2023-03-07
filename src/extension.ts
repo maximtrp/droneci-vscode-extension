@@ -88,6 +88,12 @@ export function activate(context: vscode.ExtensionContext) {
   let commandPromoteBuild = vscode.commands.registerCommand("drone-ci.promoteBuild", (build) =>
     buildsProvider.promoteBuild(build)
   );
+  let commandApproveBuildStage = vscode.commands.registerCommand("drone-ci.approveBuildStage", (stage) =>
+    buildsProvider.approveBuildStage(stage)
+  );
+  let commandDeclineBuildStage = vscode.commands.registerCommand("drone-ci.declineBuildStage", (stage) =>
+    buildsProvider.declineBuildStage(stage)
+  );
   let commandCancelBuild = vscode.commands.registerCommand("drone-ci.cancelBuild", (build) =>
     buildsProvider.cancelBuild(build)
   );
@@ -196,6 +202,8 @@ export function activate(context: vscode.ExtensionContext) {
       commandAddCron,
       commandEditCron,
       commandTriggerBuild,
+      commandApproveBuildStage,
+      commandDeclineBuildStage,
       commandDisableRepo,
       commandEnableRepo,
       commandRepairRepo,

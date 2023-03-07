@@ -27,7 +27,9 @@ interface BuildInfo {
 }
 
 interface StageInfo {
+  name: string;
   number: number;
+  status: string;
   steps: StepInfo[];
 }
 
@@ -44,6 +46,33 @@ interface Log {
 interface BuildIcon {
   icon: string;
   color: string;
+}
+
+function getIcon(status: string = "fallback", event?: string): vscode.ThemeIcon {
+  let presets: { [status: string]: BuildIcon } = {
+    skipped: { icon: "debug-step-over", color: "disabledForeground" },
+    declined: { icon: "circle-slash", color: "charts.red" },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    waiting_on_dependencies: { icon: "watch", color: "charts.yellow" },
+    blocked: { icon: "warning", color: "charts.yellow" },
+    success: { icon: "pass", color: "charts.green" },
+    error: { icon: "error", color: "charts.red" },
+    failure: { icon: "error", color: "charts.red" },
+    pending: { icon: "sync~spin", color: "charts.blue" },
+    killed: { icon: "stop-circle", color: "charts.red" },
+    running: { icon: "run", color: "charts.green" },
+    fallback: { icon: "pass", color: "charts.purple" },
+  };
+  let selectedPreset: BuildIcon = presets[status] || presets.fallback;
+  if (event === "custom" && status !== "running") {
+    selectedPreset.icon = "repl";
+  } else if (event === "promote" && status !== "running") {
+    selectedPreset.icon = "rocket";
+  } else if (event === "cron" && status !== "running") {
+    selectedPreset.icon = "calendar";
+  }
+
+  return new vscode.ThemeIcon(selectedPreset.icon, new vscode.ThemeColor(selectedPreset.color));
 }
 
 export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | None> {
@@ -75,25 +104,30 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     return element;
   }
 
-  async getChildren(build?: Build): Promise<Build[] | Step[] | LoadMore[] | None[]> {
+  async getChildren(element?: Build | Stage): Promise<Build[] | Step[] | LoadMore[] | None[]> {
     if (this.client && this.data) {
-      if (build) {
-        let buildInfo: BuildInfo | null = await this.client.getBuild(this.data.owner, this.data.repo, build.number);
-
-        if (buildInfo && buildInfo.stages && buildInfo.stages[0].steps) {
-          const stepsInfo: { step: StepInfo; stage: StageInfo; build: number }[] = buildInfo.stages
-            .map((stage) =>
-              stage.steps.map((step) => ({
-                build: build.number,
-                stage,
-                step,
-              }))
-            )
-            .flat();
-          let steps: Step[] = stepsInfo.map((stepInfo) => new Step(stepInfo.step, stepInfo.stage, stepInfo.build));
-          if (steps.length > 0) {
-            return steps;
+      if (element) {
+        if (element.contextValue?.startsWith("build")) {
+          try {
+            let buildInfo: BuildInfo | null = await this.client.getBuild(
+              this.data.owner,
+              this.data.repo,
+              element.number
+            );
+            if (buildInfo && buildInfo.stages && buildInfo.stages.length > 0) {
+              return buildInfo.stages.map((stage) => new Stage(stage, buildInfo!.number));
+            } else {
+              return [new None("No stages found")];
+            }
+          } catch (e) {
+            return [new None("Error occurred while loading build stages")];
           }
+        } else if (element.contextValue?.startsWith("stage")) {
+          const stage = element as Stage;
+          if (stage.steps && stage.steps.length > 0) {
+            return stage.steps.map((step) => new Step(step, stage.number, stage.build));
+          }
+          return [new None("No steps found")];
         }
         return [new None("Nothing found")];
       } else {
@@ -208,6 +242,32 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     }
   }
 
+  async approveBuildStage(stage: Stage) {
+    if (this.data) {
+      try {
+        await this.client.approveBuild(this.data.owner, this.data.repo, stage.build, stage.number);
+        this.refresh();
+      } catch (error: any) {
+        vscode.window.showWarningMessage(
+          `Stage ${stage.number} of build ${stage.build} was not approved. ${error.message}`
+        );
+      }
+    }
+  }
+
+  async declineBuildStage(stage: Stage) {
+    if (this.data) {
+      try {
+        await this.client.declineBuild(this.data.owner, this.data.repo, stage.build, stage.number);
+        this.refresh();
+      } catch (error: any) {
+        vscode.window.showWarningMessage(
+          `Stage ${stage.number} of build ${stage.build} was not declined. ${error.message}`
+        );
+      }
+    }
+  }
+
   async restartBuild(build: Build) {
     if (this.data) {
       try {
@@ -303,20 +363,35 @@ class LoadMore extends vscode.TreeItem {
   }
 }
 
+class Stage extends vscode.TreeItem {
+  public number: number;
+  public build: number;
+  public steps?: StepInfo[];
+
+  constructor(stage: StageInfo, build: number) {
+    const label = `Stage ${stage.number}: ${stage.name}`;
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
+    this.contextValue = stage.status === "blocked" ? "stage_blocked" : "stage";
+    this.number = stage.number;
+    this.steps = stage.steps;
+    this.build = build;
+    this.iconPath = getIcon(stage.status);
+  }
+}
+
 class Step extends vscode.TreeItem {
   public step: number;
   public stage: number;
+  public build: number;
 
-  constructor(step: StepInfo, stage: StageInfo, public build: number) {
-    const label = `Stage ${stage.number}: ${step.name}`;
+  constructor(step: StepInfo, stage: number, build: number) {
+    const label = `Step ${step.number}: ${step.name}`;
     super(label, vscode.TreeItemCollapsibleState.None);
     this.contextValue = "step";
     this.step = step.number;
-    this.stage = stage.number;
-    this.iconPath =
-      step.status === "success"
-        ? new vscode.ThemeIcon("pass", new vscode.ThemeColor("charts.green"))
-        : new vscode.ThemeIcon("error", new vscode.ThemeColor("charts.red"));
+    this.stage = stage;
+    this.build = build;
+    this.iconPath = getIcon(step.status);
   }
 }
 
@@ -344,28 +419,6 @@ class Build extends vscode.TreeItem {
       .filter((i) => !!i)
       .join("\n");
     this.contextValue = `build_${build.status}`;
-    this.iconPath = this.selectIcon(build);
-  }
-
-  selectIcon(build: BuildInfo): vscode.ThemeIcon {
-    let presets: { [status: string]: BuildIcon } = {
-      success: { icon: "pass", color: "charts.green" },
-      error: { icon: "error", color: "charts.red" },
-      failure: { icon: "error", color: "charts.red" },
-      pending: { icon: "sync~spin", color: "charts.blue" },
-      killed: { icon: "stop-circle", color: "charts.red" },
-      running: { icon: "run", color: "charts.green" },
-      fallback: { icon: "pass", color: "charts.yellow" },
-    };
-    let selectedPreset: BuildIcon = presets[build.status] || presets.fallback;
-    if (build.event === "custom" && build.status !== "running") {
-      selectedPreset.icon = "repl";
-    } else if (build.event === "promote" && build.status !== "running") {
-      selectedPreset.icon = "rocket";
-    } else if (build.event === "cron" && build.status !== "running") {
-      selectedPreset.icon = "calendar";
-    }
-
-    return new vscode.ThemeIcon(selectedPreset.icon, new vscode.ThemeColor(selectedPreset.color));
+    this.iconPath = getIcon(build.status, build.event);
   }
 }

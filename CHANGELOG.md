@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.2.0 - 2023-03-08
+
+- Builds view has a build → stage → step hierarchy now.
+- Added Approve and Decline buttons to stage items in Builds view.
+- Improved status icons in Builds view.
+
 ## 1.1.0 - 2023-03-07
 
 - Improved error handling.
@@ -12,4 +18,4 @@
 
 ## 1.0.0 - 2023-03-04
 
-- Initial release
+- Initial release.
