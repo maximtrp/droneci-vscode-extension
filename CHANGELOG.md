@@ -2,7 +2,7 @@
 
 ## 1.2.1 - 2023-03-12
 
-- Server items editting improved.
+- Server items editing improved.
 
 ## 1.2.0 - 2023-03-08
 
