@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
   const cronsProvider = new CronsProvider();
   vscode.window.registerTreeDataProvider("drone-ci-cron", cronsProvider);
 
-  const serversTree = vscode.window.createTreeView("drone-ci-servers", {
+  const serversTree = vscode.window.createTreeView<Server>("drone-ci-servers", {
     treeDataProvider: serversProvider,
   });
 

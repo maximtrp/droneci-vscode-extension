@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.1 - 2023-03-12
+
+- Server items editting improved.
+
 ## 1.2.0 - 2023-03-08
 
 - Builds view has a build → stage → step hierarchy now.

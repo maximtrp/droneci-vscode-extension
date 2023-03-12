@@ -2,7 +2,7 @@
   "name": "drone-ci",
   "displayName": "Drone CI",
   "description": "Manage your Drone CI servers easily",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "maximtrp",
   "author": {
     "name": "Maksim Terpilovskii",

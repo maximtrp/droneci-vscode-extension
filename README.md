@@ -3,6 +3,8 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/maximtrp/droneci-vscode-extension/main.yml)
 ![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/maximtrp.drone-ci)
 ![Codacy Grade](https://img.shields.io/codacy/grade/5bfec3730914417d958e8dfb3bd00f3e/main)
+![Open VSX Downloads](https://img.shields.io/open-vsx/dt/maximtrp/drone-ci?label=downloads:+OpenVSX)
+![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/maximtrp.drone-ci?label=downloads:+VSM)
 
 This extension integrates Drone CI into VS Code. It allows you to quickly browse and manage your repos, builds, secrets
 and cron jobs.

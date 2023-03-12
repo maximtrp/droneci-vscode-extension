@@ -77,15 +77,31 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
   async editServer(server: Server) {
     let servers: ServerInfo[] = [];
 
-    const url = await vscode.window.showInputBox({
-      placeHolder: "https://drone.domain.name",
-      prompt: "Please specify Drone CI server address",
-      value: server.url,
-      ignoreFocusOut: true,
-    });
+    const url = (
+      (await vscode.window.showInputBox({
+        placeHolder: "https://drone.domain.name",
+        prompt: "Please specify Drone CI server address",
+        value: server.url,
+        ignoreFocusOut: true,
+      })) || ""
+    ).replace(/\/+$/, "");
+
     if (!url) {
       vscode.window.showWarningMessage(`You have not entered Drone CI server address`);
       return;
+    } else {
+      // Getting existing servers
+      servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+      // Checking if a server with entered URL exists
+      let serverExists = servers
+        .filter((existingServer: ServerInfo) => server.url !== existingServer.url)
+        .find((server: ServerInfo) => server.url === url);
+      if (serverExists) {
+        vscode.window.showErrorMessage("Server with this URL already exists");
+        return;
+      }
+      // Removing the server that is being editted
+      servers = servers.filter((server: ServerInfo) => server.url !== url);
     }
 
     const label = await vscode.window.showInputBox({
@@ -95,23 +111,16 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       ignoreFocusOut: true,
     });
 
-    servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
-    servers = servers.filter((server: ServerInfo) => server.url !== url);
-
-    const token = await vscode.window.showInputBox({
-      placeHolder: "API key",
-      prompt: "Specify Drone CI server API key",
-      value: server.token,
-      ignoreFocusOut: true,
-    });
-    if (!token) {
-      vscode.window.showWarningMessage(`You have not entered Drone CI server token`);
-      return;
-    }
+    const token =
+      (await vscode.window.showInputBox({
+        placeHolder: "API key",
+        prompt: "Specify Drone CI server API key",
+        ignoreFocusOut: true,
+      })) || server.token;
 
     let serverNew: ServerInfo = {
       id: this.servers.length,
-      url: url.replace(/\/+$/, ""),
+      url: url,
       token: token,
       label: label || url.replace("https://", ""),
     };
@@ -136,7 +145,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     return await this.getServers();
   }
 
-  getFirst() {
+  getFirst(): vscode.TreeItem | null {
     if (this.servers.length > 0) {
       return new Server(this.servers[0]);
     } else {
@@ -156,8 +165,8 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 }
 
 export class Server extends vscode.TreeItem {
-  url?: string;
-  token?: string;
+  url: string;
+  token: string;
 
   constructor(server: ServerInfo) {
     super(server.label, vscode.TreeItemCollapsibleState.None);
