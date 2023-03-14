@@ -91,17 +91,15 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       return;
     } else {
       // Getting existing servers
-      servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+      servers = JSON.parse((await this.context.secrets.get("servers")) || "[]").filter(
+        (existingServer: ServerInfo) => server.url !== existingServer.url
+      );
       // Checking if a server with entered URL exists
-      let serverExists = servers
-        .filter((existingServer: ServerInfo) => server.url !== existingServer.url)
-        .find((server: ServerInfo) => server.url === url);
+      let serverExists = servers.find((server: ServerInfo) => server.url === url);
       if (serverExists) {
         vscode.window.showErrorMessage("Server with this URL already exists");
         return;
       }
-      // Removing the server that is being editted
-      servers = servers.filter((server: ServerInfo) => server.url !== url);
     }
 
     const label = await vscode.window.showInputBox({

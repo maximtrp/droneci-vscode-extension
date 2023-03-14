@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.3 - 2023-03-14
+
+- Fixed a bug in server items editing.
+
 ## 1.2.1 - 2023-03-12
 
 - Server items editing improved.
