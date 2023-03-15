@@ -712,7 +712,7 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile && npm run lint && npm run esbuild-base",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "test-compile": "tsc -p ./",
