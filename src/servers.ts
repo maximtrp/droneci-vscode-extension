@@ -43,7 +43,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     });
 
     servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
-    let serverExists = servers.find((server: ServerInfo) => server.url === url);
+    const serverExists = servers.find((server: ServerInfo) => server.url === url);
 
     if (serverExists) {
       vscode.window.showErrorMessage("Server with this URL already exists");
@@ -61,7 +61,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       return;
     }
 
-    let server: ServerInfo = {
+    const server: ServerInfo = {
       id: this.servers.length,
       url: url.replace(/\/+$/, ""),
       token: token,
@@ -116,7 +116,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
         ignoreFocusOut: true,
       })) || server.token;
 
-    let serverNew: ServerInfo = {
+    const serverNew: ServerInfo = {
       id: this.servers.length,
       url: url,
       token: token,
