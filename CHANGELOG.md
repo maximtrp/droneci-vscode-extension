@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.3.0 - 2023-03-19
+
+- Removed context from `activate` method.
+
 ## 1.2.3 - 2023-03-14
 
 - Fixed a bug in server items editing.

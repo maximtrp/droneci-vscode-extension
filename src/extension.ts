@@ -234,7 +234,6 @@ export function activate(context: vscode.ExtensionContext) {
       commandTriggerCron,
     ]
   );
-  (global as any).testExtensionContext = context;
 }
 
 export function deactivate() {}
