@@ -2,6 +2,7 @@
 
 "use strict";
 
+const webpack = require("webpack");
 const path = require("path");
 
 /**@type {import('webpack').Configuration}*/
@@ -10,10 +11,9 @@ const config = {
   target: "node",
   entry: { extension: "./src/extension.ts" },
   output: {
-    // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, "out"),
     filename: "[name].js",
-    libraryTarget: "commonjs2",
+    libraryTarget: "commonjs",
     devtoolModuleFilenameTemplate: "../[resource-path]",
   },
   devtool: "source-map",
@@ -23,9 +23,8 @@ const config = {
   resolve: {
     mainFields: ["main"],
     extensions: [".ts", ".js", ".mjs"],
-    alias: {
-      // provides alternate implementation for node module and source files
-    },
+    alias: {},
+    fallback: {},
   },
   module: {
     rules: [
@@ -35,11 +34,6 @@ const config = {
         use: [
           {
             loader: "ts-loader",
-            options: {
-              compilerOptions: {
-                module: "es6", // override `tsconfig.json` so that TypeScript emits native JavaScript modules.
-              },
-            },
           },
         ],
       },
@@ -51,11 +45,11 @@ const config = {
 const webConfig = {
   mode: "none",
   target: "webworker",
-  entry: { "web-extension": "./src/extension.ts" },
+  entry: { webExtension: "./src/extension.ts" },
   output: {
     path: path.resolve(__dirname, "out"),
     filename: "[name].js",
-    libraryTarget: "commonjs2",
+    libraryTarget: "commonjs",
   },
   devtool: "source-map",
   externals: {
@@ -63,11 +57,21 @@ const webConfig = {
   },
   resolve: {
     mainFields: ["browser", "module", "main"],
-    extensions: [".ts", ".js", ".mjs"],
+    extensions: [".ts", ".js"],
     alias: {
-      // provides alternate implementation for node module and source files
+      "@hapi/joi": path.join(__dirname, "./node_modules/@hapi/joi/lib/index.js"),
     },
-    fallback: {},
+    aliasFields: [],
+    fallback: {
+      url: require.resolve("url"),
+      http: require.resolve("stream-http"),
+      https: require.resolve("https-browserify"),
+      util: require.resolve("util"),
+      assert: require.resolve("assert"),
+      stream: require.resolve("stream-browserify"),
+      buffer: require.resolve("buffer"),
+      zlib: require.resolve("browserify-zlib"),
+    },
   },
   module: {
     rules: [
@@ -77,16 +81,19 @@ const webConfig = {
         use: [
           {
             loader: "ts-loader",
-            options: {
-              compilerOptions: {
-                module: "es6", // override `tsconfig.json` so that TypeScript emits native JavaScript modules.
-              },
-            },
           },
         ],
       },
     ],
   },
+  plugins: [
+    new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
+    }),
+    new webpack.ProvidePlugin({
+      process: "process/browser",
+    }),
+  ],
 };
 
 module.exports = [config, webConfig];
