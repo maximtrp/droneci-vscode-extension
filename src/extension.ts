@@ -34,7 +34,8 @@ export function activate(context: vscode.ExtensionContext) {
         url: serversView.selection[0].url,
         token: serversView.selection[0].token,
       });
-      reposProvider.refresh(droneClient);
+      reposProvider.setClient();
+      reposProvider.refresh();
       vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
       vscode.commands.executeCommand("setContext", "hasServerSelected", true);
     } else {
@@ -52,9 +53,9 @@ export function activate(context: vscode.ExtensionContext) {
       const repo = repoView.selection[0];
       if (repo.name && repo.owner) {
         const repoInfo = { owner: repo.owner, repo: repo.name };
-        buildsProvider.refresh(droneClient, repoInfo);
-        secretsProvider.refresh(droneClient, repoInfo);
-        cronsProvider.refresh(droneClient, repoInfo);
+        buildsProvider.setClient(droneClient).setData(repoInfo).refresh();
+        secretsProvider.setClient(droneClient).setData(repoInfo).refresh();
+        cronsProvider.setClient(droneClient).setData(repoInfo).refresh();
         vscode.commands.executeCommand("setContext", "hasRepoSelected", true);
       }
     } else {
@@ -63,103 +64,105 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   // COMMANDS
-  let commandAddSecret = vscode.commands.registerCommand("drone-ci.addSecret", () => secretsProvider.addSecret());
-  let commandEditSecret = vscode.commands.registerCommand("drone-ci.editSecret", (secret) =>
+  const commandAddSecret = vscode.commands.registerCommand("drone-ci.addSecret", () => secretsProvider.addSecret());
+  const commandEditSecret = vscode.commands.registerCommand("drone-ci.editSecret", (secret) =>
     secretsProvider.editSecret(secret)
   );
-  let commandAddServer = vscode.commands.registerCommand("drone-ci.addServer", () => serversProvider.addServer());
-  let commandEditServer = vscode.commands.registerCommand("drone-ci.editServer", (server) =>
+  const commandAddServer = vscode.commands.registerCommand("drone-ci.addServer", () => serversProvider.addServer());
+  const commandEditServer = vscode.commands.registerCommand("drone-ci.editServer", (server) =>
     serversProvider.editServer(server)
   );
-  let commandAddCron = vscode.commands.registerCommand("drone-ci.addCron", () => cronsProvider.addCron());
-  let commandEditCron = vscode.commands.registerCommand("drone-ci.editCron", (cron) => cronsProvider.editCron(cron));
-  let commandTriggerBuild = vscode.commands.registerCommand("drone-ci.triggerBuild", () =>
+  const commandAddCron = vscode.commands.registerCommand("drone-ci.addCron", () => cronsProvider.addCron());
+  const commandEditCron = vscode.commands.registerCommand("drone-ci.editCron", (cron) => cronsProvider.editCron(cron));
+  const commandTriggerBuild = vscode.commands.registerCommand("drone-ci.triggerBuild", () =>
     buildsProvider.triggerBuild()
   );
-  let commandDisableRepo = vscode.commands.registerCommand("drone-ci.disableRepo", (repo) =>
+  const commandDisableRepo = vscode.commands.registerCommand("drone-ci.disableRepo", (repo) =>
     reposProvider.disableRepo(repo)
   );
-  let commandEnableRepo = vscode.commands.registerCommand("drone-ci.enableRepo", (repo) =>
+  const commandEnableRepo = vscode.commands.registerCommand("drone-ci.enableRepo", (repo) =>
     reposProvider.enableRepo(repo)
   );
-  let commandRepairRepo = vscode.commands.registerCommand("drone-ci.repairRepo", (repo) =>
+  const commandRepairRepo = vscode.commands.registerCommand("drone-ci.repairRepo", (repo) =>
     reposProvider.repairRepo(repo)
   );
-  let commandPromoteBuild = vscode.commands.registerCommand("drone-ci.promoteBuild", (build) =>
+  const commandPromoteBuild = vscode.commands.registerCommand("drone-ci.promoteBuild", (build) =>
     buildsProvider.promoteBuild(build)
   );
-  let commandApproveBuildStage = vscode.commands.registerCommand("drone-ci.approveBuildStage", (stage) =>
+  const commandApproveBuildStage = vscode.commands.registerCommand("drone-ci.approveBuildStage", (stage) =>
     buildsProvider.approveBuildStage(stage)
   );
-  let commandDeclineBuildStage = vscode.commands.registerCommand("drone-ci.declineBuildStage", (stage) =>
+  const commandDeclineBuildStage = vscode.commands.registerCommand("drone-ci.declineBuildStage", (stage) =>
     buildsProvider.declineBuildStage(stage)
   );
-  let commandCancelBuild = vscode.commands.registerCommand("drone-ci.cancelBuild", (build) =>
+  const commandCancelBuild = vscode.commands.registerCommand("drone-ci.cancelBuild", (build) =>
     buildsProvider.cancelBuild(build)
   );
-  let commandRestartBuild = vscode.commands.registerCommand("drone-ci.restartBuild", (build) =>
+  const commandRestartBuild = vscode.commands.registerCommand("drone-ci.restartBuild", (build) =>
     buildsProvider.restartBuild(build)
   );
-  let commandRefreshBuilds = vscode.commands.registerCommand("drone-ci.refreshBuilds", () => buildsProvider.refresh());
-  let commandLoadMoreBuilds = vscode.commands.registerCommand("drone-ci.loadMoreBuilds", () =>
+  const commandRefreshBuilds = vscode.commands.registerCommand("drone-ci.refreshBuilds", () =>
+    buildsProvider.refresh()
+  );
+  const commandLoadMoreBuilds = vscode.commands.registerCommand("drone-ci.loadMoreBuilds", () =>
     buildsProvider.loadMore()
   );
-  let commandRefreshRepos = vscode.commands.registerCommand("drone-ci.refreshRepos", () => reposProvider.refresh());
-  let commandRefreshSecrets = vscode.commands.registerCommand("drone-ci.refreshSecrets", () =>
+  const commandRefreshRepos = vscode.commands.registerCommand("drone-ci.refreshRepos", () => reposProvider.refresh());
+  const commandRefreshSecrets = vscode.commands.registerCommand("drone-ci.refreshSecrets", () =>
     secretsProvider.refresh()
   );
-  let commandRefreshCrons = vscode.commands.registerCommand("drone-ci.refreshCrons", () => cronsProvider.refresh());
-  let commandGotoSecretsPage = vscode.commands.registerCommand("drone-ci.gotoSecretsPage", () =>
+  const commandRefreshCrons = vscode.commands.registerCommand("drone-ci.refreshCrons", () => cronsProvider.refresh());
+  const commandGotoSecretsPage = vscode.commands.registerCommand("drone-ci.gotoSecretsPage", () =>
     secretsProvider.gotoSecretsPage()
   );
-  let commandGotoCronPage = vscode.commands.registerCommand("drone-ci.gotoCronPage", () =>
+  const commandGotoCronPage = vscode.commands.registerCommand("drone-ci.gotoCronPage", () =>
     cronsProvider.gotoCronPage()
   );
-  let commandViewBuildStepLog = vscode.commands.registerCommand("drone-ci.viewBuildStepLog", async (step) =>
+  const commandViewBuildStepLog = vscode.commands.registerCommand("drone-ci.viewBuildStepLog", async (step) =>
     buildsProvider.viewStepLog(step)
   );
-  let commandViewBuildInfo = vscode.commands.registerCommand("drone-ci.viewBuildInfo", async (build) =>
+  const commandViewBuildInfo = vscode.commands.registerCommand("drone-ci.viewBuildInfo", async (build) =>
     buildsProvider.viewBuildInfo(build)
   );
-  let commandGotoServer = vscode.commands.registerCommand("drone-ci.gotoServer", (item) => {
+  const commandGotoServer = vscode.commands.registerCommand("drone-ci.gotoServer", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.url));
   });
-  let commandGotoRepoPage = vscode.commands.registerCommand("drone-ci.gotoRepoPage", (item) => {
+  const commandGotoRepoPage = vscode.commands.registerCommand("drone-ci.gotoRepoPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.url));
   });
-  let commandGotoRepoBranchesPage = vscode.commands.registerCommand("drone-ci.gotoRepoBranchesPage", (item) => {
+  const commandGotoRepoBranchesPage = vscode.commands.registerCommand("drone-ci.gotoRepoBranchesPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.branchesURL));
   });
-  let commandGotoRepoDeploymentsPage = vscode.commands.registerCommand("drone-ci.gotoRepoDeploymentsPage", (item) => {
+  const commandGotoRepoDeploymentsPage = vscode.commands.registerCommand("drone-ci.gotoRepoDeploymentsPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.deploymentsURL));
   });
-  let commandGotoRepoSettingsPage = vscode.commands.registerCommand("drone-ci.gotoRepoSettingsPage", (item) => {
+  const commandGotoRepoSettingsPage = vscode.commands.registerCommand("drone-ci.gotoRepoSettingsPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.settingsURL));
   });
-  let commandGotoGitRepoPage = vscode.commands.registerCommand("drone-ci.gotoGitRepoPage", (item) => {
+  const commandGotoGitRepoPage = vscode.commands.registerCommand("drone-ci.gotoGitRepoPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.gitURL));
   });
-  let commandGotoBuildPage = vscode.commands.registerCommand("drone-ci.gotoBuildPage", (item) => {
+  const commandGotoBuildPage = vscode.commands.registerCommand("drone-ci.gotoBuildPage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.url));
   });
-  let commandGotoBuildComparePage = vscode.commands.registerCommand("drone-ci.gotoBuildComparePage", (item) => {
+  const commandGotoBuildComparePage = vscode.commands.registerCommand("drone-ci.gotoBuildComparePage", (item) => {
     vscode.env.openExternal(vscode.Uri.parse(item.url));
   });
-  let commandDeleteServer = vscode.commands.registerCommand("drone-ci.deleteServer", (server) => {
+  const commandDeleteServer = vscode.commands.registerCommand("drone-ci.deleteServer", (server) => {
     vscode.window
       .showInformationMessage("Are you sure you want to delete this server?", "Yes", "No")
       .then(async (answer) => {
         if (answer === "Yes") {
           await serversProvider.deleteServer(server);
           if (
-            serversProvider.servers.length === 0 ||
+            serversProvider.serversNum === 0 ||
             (serversTree.selection.length > 0 && server.label === serversTree.selection[0].label)
           ) {
             droneClient = null;
-            buildsProvider.refresh(null, null);
-            cronsProvider.refresh(null, null);
-            secretsProvider.refresh(null, null);
-            reposProvider.refresh(null);
+            buildsProvider.reset();
+            cronsProvider.reset();
+            secretsProvider.reset();
+            reposProvider.reset();
             vscode.commands.executeCommand("setContext", "hasServerSelected", false);
             vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
           }
@@ -167,7 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
       });
   });
 
-  let commandDeleteSecret = vscode.commands.registerCommand("drone-ci.deleteSecret", (secret) => {
+  const commandDeleteSecret = vscode.commands.registerCommand("drone-ci.deleteSecret", (secret) => {
     vscode.window.showInformationMessage("Are you sure you want to delete this secret?", "Yes", "No").then((answer) => {
       if (answer === "Yes") {
         secretsProvider.deleteSecret(secret);
@@ -175,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
   });
 
-  let commandDeleteCron = vscode.commands.registerCommand("drone-ci.deleteCron", (cron) => {
+  const commandDeleteCron = vscode.commands.registerCommand("drone-ci.deleteCron", (cron) => {
     vscode.window
       .showInformationMessage("Are you sure you want to delete this cron job?", "Yes", "No")
       .then((answer) => {
@@ -185,7 +188,7 @@ export function activate(context: vscode.ExtensionContext) {
       });
   });
 
-  let commandTriggerCron = vscode.commands.registerCommand("drone-ci.triggerCron", async (cron) => {
+  const commandTriggerCron = vscode.commands.registerCommand("drone-ci.triggerCron", async (cron) => {
     await cronsProvider.triggerCron(cron);
     buildsProvider.refresh();
   });

@@ -12,7 +12,7 @@ interface SecretInfo {
 
 export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
   private client: any | null = null;
-  public data: RepoInfo | null = null;
+  private data: RepoInfo | null = null;
 
   constructor() {
     this.client = null;
@@ -47,7 +47,7 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
       return;
     }
 
-    let pullRequest: boolean =
+    const pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
     try {
@@ -77,7 +77,7 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
       return;
     }
 
-    let pullRequest: boolean =
+    const pullRequest: boolean =
       (await vscode.window.showInformationMessage("Allow pull requests?", "Yes", "No")) === "Yes";
 
     try {
@@ -92,24 +92,36 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
   }
 
   async deleteSecret(secret: Secret) {
-    if (this.data) {
-      try {
-        await this.client.deleteSecret(this.data.owner, this.data.repo, secret.label);
-        this.refresh();
-      } catch (e) {
-        vscode.window.showWarningMessage("Secret was not deleted.");
-      }
+    try {
+      await this.client.deleteSecret(this.data?.owner, this.data?.repo, secret.label);
+      this.refresh();
+    } catch (e) {
+      vscode.window.showWarningMessage("Secret was not deleted.");
     }
   }
 
-  refresh(client?: any, data?: RepoInfo | null) {
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+
+  setClient(client?: any) {
     if (client !== undefined) {
       this.client = client;
     }
+    return this;
+  }
+
+  setData(data?: RepoInfo | null) {
     if (data !== undefined) {
       this.data = data;
     }
-    this._onDidChangeTreeData.fire();
+    return this;
+  }
+
+  reset() {
+    this.client = null;
+    this.data = null;
+    this.refresh();
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -118,7 +130,7 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
 
   async getChildren() {
     if (this.client && this.data) {
-      let secrets = await this.client.getSecrets(this.data.owner, this.data.repo);
+      const secrets = await this.client.getSecrets(this.data.owner, this.data.repo);
       const results = (secrets || []).map((secret: SecretInfo) => new Secret(secret));
       if (results.length > 0) {
         return results;

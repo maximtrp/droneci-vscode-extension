@@ -8,7 +8,7 @@ interface ServerInfo {
 }
 
 export class ServersProvider implements vscode.TreeDataProvider<Server> {
-  servers: ServerInfo[] = [];
+  private servers: ServerInfo[] = [];
 
   constructor(private context: vscode.ExtensionContext) {}
 
@@ -17,13 +17,11 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
   >();
   readonly onDidChangeTreeData: vscode.Event<Server | undefined | null | void> = this._onDidChangeTreeData.event;
 
-  refresh(): void {
+  refresh() {
     this._onDidChangeTreeData.fire();
   }
 
   async addServer() {
-    let servers: ServerInfo[] = [];
-
     const url = await vscode.window.showInputBox({
       placeHolder: "https://drone.domain.name",
       prompt: "Please specify Drone CI server address",
@@ -42,9 +40,8 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       ignoreFocusOut: true,
     });
 
-    servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
-    const serverExists = servers.find((server: ServerInfo) => server.url === url);
-
+    const servers: ServerInfo[] = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+    const serverExists = servers.find((server) => server.url === url);
     if (serverExists) {
       vscode.window.showErrorMessage("Server with this URL already exists");
       return;
@@ -90,12 +87,11 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       vscode.window.showWarningMessage(`You have not entered Drone CI server address`);
       return;
     } else {
-      // Getting existing servers
       servers = JSON.parse((await this.context.secrets.get("servers")) || "[]").filter(
-        (existingServer: ServerInfo) => server.url !== existingServer.url
+        (existingServer: ServerInfo) => existingServer.url !== server.url
       );
-      // Checking if a server with entered URL exists
-      let serverExists = servers.find((server: ServerInfo) => server.url === url);
+
+      const serverExists = servers.find((server) => server.url === url);
       if (serverExists) {
         vscode.window.showErrorMessage("Server with this URL already exists");
         return;
@@ -130,7 +126,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
   }
 
   async deleteServer(serverDeleted: vscode.TreeItem) {
-    this.servers = this.servers.filter((server: ServerInfo) => server.label !== serverDeleted.label);
+    this.servers = this.servers.filter((server) => server.label !== serverDeleted.label);
     await this.context.secrets.store("servers", JSON.stringify(this.servers));
     this.refresh();
   }
@@ -159,6 +155,10 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       vscode.commands.executeCommand("setContext", "hasServerSelected", false);
       return [];
     }
+  }
+
+  get serversNum() {
+    return this.servers.length;
   }
 }
 

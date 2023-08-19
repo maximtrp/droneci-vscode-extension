@@ -15,7 +15,7 @@ interface RepoInfo {
 }
 
 export class ReposProvider implements vscode.TreeDataProvider<Repo> {
-  client: any;
+  private client: any;
 
   constructor() {}
 
@@ -24,11 +24,19 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   >();
   readonly onDidChangeTreeData: vscode.Event<Repo | undefined | null | void> = this._onDidChangeTreeData.event;
 
-  refresh(client?: any) {
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+
+  setClient(client?: any) {
     if (client !== undefined) {
       this.client = client;
     }
-    this._onDidChangeTreeData.fire();
+  }
+
+  reset() {
+    this.client = null;
+    this.refresh();
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -62,7 +70,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   }
 
   async disableRepo(repo: Repo) {
-    let remove: boolean =
+    const remove: boolean =
       (await vscode.window.showInformationMessage("Do you want to remove this repo?", "Yes", "No")) === "Yes";
 
     if (this.client) {

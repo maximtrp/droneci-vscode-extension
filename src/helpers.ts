@@ -1,4 +1,4 @@
-export let dateTimeFmt: Intl.DateTimeFormat = new Intl.DateTimeFormat("default", {
+export const dateTimeFmt: Intl.DateTimeFormat = new Intl.DateTimeFormat("default", {
   day: "numeric",
   month: "short",
   year: "numeric",

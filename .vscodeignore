@@ -13,6 +13,6 @@ dist/
 node_modules/
 out/
 !out/extension.js
-!out/web-extension.js
+!out/webExtension.js
 .c8rc
 coverage/

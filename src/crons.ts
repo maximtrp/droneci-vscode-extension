@@ -17,7 +17,7 @@ interface CronInfo {
 
 export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
   private client: any | null = null;
-  public data: RepoInfo | null = null;
+  private data: RepoInfo | null = null;
 
   constructor() {
     this.client = null;
@@ -29,14 +29,28 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
   >();
   readonly onDidChangeTreeData: vscode.Event<Cron | undefined | null | void> = this._onDidChangeTreeData.event;
 
-  refresh(client?: any, data?: RepoInfo | null) {
+  refresh() {
+    this._onDidChangeTreeData.fire();
+  }
+
+  setClient(client?: any) {
     if (client !== undefined) {
       this.client = client;
     }
+    return this;
+  }
+
+  setData(data?: RepoInfo | null) {
     if (data !== undefined) {
       this.data = data;
     }
-    this._onDidChangeTreeData.fire();
+    return this;
+  }
+
+  reset() {
+    this.client = null;
+    this.data = null;
+    this.refresh();
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -46,8 +60,9 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
   async getChildren() {
     if (this.client && this.data) {
       try {
-        let crons = (await this.client.getCrons(this.data.owner, this.data.repo)) || [];
+        const crons = (await this.client.getCrons(this.data.owner, this.data.repo)) || [];
         const results = crons.map((cron: CronInfo) => new Cron(cron));
+
         if (results.length > 0) {
           return results;
         } else {
