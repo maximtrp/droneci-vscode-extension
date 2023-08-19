@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.4.1 - 2023-08-19
+
+- Fixed a bug in updating builds after server selection.
+
+## 1.4.0 - 2023-08-19
+
+- Code cleaned and improved.
+- Extension is compatible with web environment now ([vscode.dev](https://vscode.dev)).
+
 ## 1.3.0 - 2023-03-19
 
 - Removed context from `activate` method.

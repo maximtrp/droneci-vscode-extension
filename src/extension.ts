@@ -34,8 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
         url: serversView.selection[0].url,
         token: serversView.selection[0].token,
       });
-      reposProvider.setClient();
-      reposProvider.refresh();
+      reposProvider.setClient(droneClient).refresh();
       vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
       vscode.commands.executeCommand("setContext", "hasServerSelected", true);
     } else {

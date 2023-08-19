@@ -32,6 +32,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
     if (client !== undefined) {
       this.client = client;
     }
+    return this;
   }
 
   reset() {
