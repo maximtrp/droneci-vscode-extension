@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.5.0 - 2023-08-24
+
+- Implemented autoselection of the first repo (when choosing a server).
+
 ## 1.4.1 - 2023-08-19
 
 - Fixed a bug in updating builds after server selection.

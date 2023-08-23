@@ -721,7 +721,7 @@
     "webpack-watch": "webpack --mode development --watch",
     "open-in-browser": "vscode-test-web --verbose --extensionDevelopmentPath=. .",
     "package": "webpack --mode production --devtool hidden-source-map",
-    "deploy": "vsce publish"
+    "deploy": "vsce publish && ovsx publish"
   },
   "devDependencies": {
     "@vscode/test-web": "^0.0.44",

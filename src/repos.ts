@@ -44,7 +44,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
     return element;
   }
 
-  async getChildren(): Promise<Repo[]> {
+  async getChildren(): Promise<Repo[] | None[]> {
     if (this.client) {
       let repos: RepoInfo[] = [];
       try {
@@ -68,6 +68,13 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
       }
     }
     return [new None("Select server to view repositories")];
+  }
+
+  getParent(element: vscode.TreeItem) {
+    if (!element) {
+      return null;
+    }
+    return null;
   }
 
   async disableRepo(repo: Repo) {

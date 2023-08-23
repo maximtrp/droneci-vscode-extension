@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider: serversProvider,
   });
 
-  serversTree.onDidChangeSelection((serversView: vscode.TreeViewSelectionChangeEvent<Server>) => {
+  serversTree.onDidChangeSelection(async (serversView: vscode.TreeViewSelectionChangeEvent<Server>) => {
     if (serversView.selection.length > 0) {
       droneClient = new drone.Client({
         url: serversView.selection[0].url,
@@ -36,6 +36,12 @@ export function activate(context: vscode.ExtensionContext) {
       });
       reposProvider.setClient(droneClient).refresh();
       vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
+
+      const repos = await reposProvider.getChildren();
+      if (repos[0] instanceof Repo) {
+        reposTree.reveal(repos[0], { select: true, focus: true });
+        vscode.commands.executeCommand("setContext", "hasRepoSelected", true);
+      }
       vscode.commands.executeCommand("setContext", "hasServerSelected", true);
     } else {
       vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
