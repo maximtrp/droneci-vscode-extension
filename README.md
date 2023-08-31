@@ -13,10 +13,10 @@ and cron jobs.
 
 ## Features
 
-* Support for multiple Drone CI servers
-* Repositories, builds, secrets, and cron jobs management: add, edit, delete, update or even promote your builds to any target
-* Build info and step log
-* Quick links to your servers and repository pages
+* *Multi-server support for Drone CI*: enhance your workflow with support for multiple Drone CI servers.
+* *Effortless repository and build management*: seamlessly manage repositories, builds, secrets, and cron jobs; easily perform actions like adding, editing, deleting, updating, or promoting your builds to any target.
+* *Detailed build information and step logs*: access comprehensive build information and step logs.
+* *Convenient access to server and repository pages*: quickly navigate to your server and repository pages with direct links.
 
 ## Installation
 

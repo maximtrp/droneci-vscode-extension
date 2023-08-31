@@ -70,10 +70,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
     return [new None("Select server to view repositories")];
   }
 
-  getParent(element: vscode.TreeItem) {
-    if (!element) {
-      return null;
-    }
+  getParent() {
     return null;
   }
 

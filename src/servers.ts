@@ -71,7 +71,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     this.refresh();
   }
 
-  async editServer(server: Server) {
+  async editServer(server: Server): Promise<ServerInfo | undefined> {
     let servers: ServerInfo[] = [];
 
     const url = (
@@ -123,6 +123,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     await this.context.secrets.store("servers", JSON.stringify(servers));
     vscode.window.showInformationMessage(`You have successfully updated your Drone CI server`);
     this.refresh();
+    return serverNew;
   }
 
   async deleteServer(serverDeleted: vscode.TreeItem) {
@@ -159,6 +160,10 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 
   get serversNum() {
     return this.servers.length;
+  }
+
+  getParent() {
+    return null;
   }
 }
 

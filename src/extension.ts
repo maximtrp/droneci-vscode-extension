@@ -74,9 +74,18 @@ export function activate(context: vscode.ExtensionContext) {
     secretsProvider.editSecret(secret)
   );
   const commandAddServer = vscode.commands.registerCommand("drone-ci.addServer", () => serversProvider.addServer());
-  const commandEditServer = vscode.commands.registerCommand("drone-ci.editServer", (server) =>
-    serversProvider.editServer(server)
-  );
+  const commandEditServer = vscode.commands.registerCommand("drone-ci.editServer", async (server) => {
+    const serverSelected = serversTree.selection[0];
+    const serverNew = await serversProvider.editServer(server);
+
+    if (serverNew && serverSelected.url === server.url) {
+      droneClient = new drone.Client({
+        url: serverNew.url,
+        token: serverNew.token,
+      });
+      reposProvider.setClient(droneClient).refresh();
+    }
+  });
   const commandAddCron = vscode.commands.registerCommand("drone-ci.addCron", () => cronsProvider.addCron());
   const commandEditCron = vscode.commands.registerCommand("drone-ci.editCron", (cron) => cronsProvider.editCron(cron));
   const commandTriggerBuild = vscode.commands.registerCommand("drone-ci.triggerBuild", () =>
