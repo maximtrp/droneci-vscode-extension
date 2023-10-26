@@ -178,7 +178,7 @@ export class Repo extends vscode.TreeItem {
 function sortReposBy(field: string, order: number) {
   switch (field) {
     case "Activity":
-      return (i: RepoInfo, j: RepoInfo) => (i.active > j.active ? -1 : 1) * order;
+      return (i: RepoInfo, j: RepoInfo) => (i.active < j.active ? -1 : 1) * order;
     case "Visibility":
       return (i: RepoInfo, j: RepoInfo) => (i.visibility > j.visibility ? -1 : 1) * order;
     case "Creation Date":

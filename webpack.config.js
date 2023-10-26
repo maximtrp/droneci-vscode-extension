@@ -70,6 +70,7 @@ const webConfig = {
       assert: require.resolve("assert"),
       stream: require.resolve("stream-browserify"),
       buffer: require.resolve("buffer"),
+      Buffer: require.resolve("buffer"),
       zlib: require.resolve("browserify-zlib"),
     },
   },
