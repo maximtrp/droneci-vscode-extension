@@ -12,10 +12,10 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 
   constructor(private context: vscode.ExtensionContext) {}
 
-  private _onDidChangeTreeData: vscode.EventEmitter<Server | undefined | null | void> = new vscode.EventEmitter<
-    Server | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<Server | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<Server | undefined | null | void> =
+    new vscode.EventEmitter<Server | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<Server | undefined | null | void> =
+    this._onDidChangeTreeData.event;
 
   refresh() {
     this._onDidChangeTreeData.fire();
@@ -148,7 +148,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     }
   }
 
-  async getServers() {
+  async getServers(): Promise<Server[]> {
     this.servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
     if (this.servers.length > 0) {
       return this.servers.map((s) => new Server(s));
@@ -158,12 +158,12 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     }
   }
 
-  get serversNum() {
-    return this.servers.length;
-  }
-
   getParent() {
     return null;
+  }
+
+  get serversNum() {
+    return this.servers.length;
   }
 }
 

@@ -8,6 +8,7 @@ interface RepoInfo {
   private: boolean;
   trusted: boolean;
   updated: number;
+  created: number;
   visibility: string;
   name: string;
   namespace: string;
@@ -19,10 +20,10 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
 
   constructor() {}
 
-  private _onDidChangeTreeData: vscode.EventEmitter<Repo | undefined | null | void> = new vscode.EventEmitter<
-    Repo | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<Repo | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<Repo | undefined | null | void> =
+    new vscode.EventEmitter<Repo | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<Repo | undefined | null | void> =
+    this._onDidChangeTreeData.event;
 
   refresh() {
     this._onDidChangeTreeData.fire();
@@ -47,10 +48,24 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   async getChildren(): Promise<Repo[] | None[]> {
     if (this.client) {
       let repos: RepoInfo[] = [];
+
       try {
         repos = (await this.client.getRepos()) || [];
         if (repos.length > 0) {
-          repos = repos.sort((i, j) => (i.slug < j.slug ? -1 : 1));
+          const sortField: string =
+            vscode.workspace.getConfiguration("drone-ci.sortRepos").get("by") || "Name";
+          const order: string =
+            vscode.workspace.getConfiguration("drone-ci.sortRepos").get("order") || "DESC";
+          const activityFilter: string | null =
+            vscode.workspace.getConfiguration("drone-ci.filterRepos").get("byActivity") || null;
+          const visibilityFilter: string | null =
+            vscode.workspace.getConfiguration("drone-ci.filterRepos").get("byVisibility") || null;
+          repos = repos
+            .filter((repo) =>
+              filterReposBy(repo, { activity: activityFilter, visibility: visibilityFilter })
+            )
+            .sort(sortReposBy(sortField, order == "DESC" ? -1 : 1));
+
           return repos.map(
             (repo) =>
               new Repo({
@@ -70,13 +85,17 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
     return [new None("Select server to view repositories")];
   }
 
-  getParent() {
+  getParent(): null {
     return null;
   }
 
   async disableRepo(repo: Repo) {
     const remove: boolean =
-      (await vscode.window.showInformationMessage("Do you want to remove this repo?", "Yes", "No")) === "Yes";
+      (await vscode.window.showInformationMessage(
+        "Do you want to remove this repo?",
+        "Yes",
+        "No"
+      )) === "Yes";
 
     if (this.client) {
       try {
@@ -111,7 +130,10 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
 }
 
 class None extends vscode.TreeItem {
-  constructor(label: string, state: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None) {
+  constructor(
+    label: string,
+    state: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+  ) {
     super(label || "Nothing found", state);
     this.iconPath = new vscode.ThemeIcon(label.startsWith("Error") ? "warning" : "info");
   }
@@ -146,7 +168,35 @@ export class Repo extends vscode.TreeItem {
     this.url = `${repo.baseURL}/${repo.slug}`;
     this.iconPath = new vscode.ThemeIcon(
       "repo",
-      !repo.active ? new vscode.ThemeColor("disabledForeground") : undefined
+      !repo.active
+        ? new vscode.ThemeColor("disabledForeground")
+        : new vscode.ThemeColor("foreground")
     );
   }
+}
+
+function sortReposBy(field: string, order: number) {
+  switch (field) {
+    case "Activity":
+      return (i: RepoInfo, j: RepoInfo) => (i.active > j.active ? -1 : 1) * order;
+    case "Visibility":
+      return (i: RepoInfo, j: RepoInfo) => (i.visibility > j.visibility ? -1 : 1) * order;
+    case "Creation Date":
+      return (i: RepoInfo, j: RepoInfo) => (i.created < j.created ? -1 : 1) * order;
+    case "Last Update":
+      return (i: RepoInfo, j: RepoInfo) => (i.updated < j.updated ? -1 : 1) * order;
+    default:
+      return (i: RepoInfo, j: RepoInfo) => (i.slug < j.slug ? -1 : 1) * order;
+  }
+}
+
+function filterReposBy(
+  repo: RepoInfo,
+  { activity, visibility }: { activity: string | null; visibility: string | null }
+) {
+  const activityFilter = (repo: RepoInfo) =>
+    activity == "All" ? true : activity == "Active" ? repo.active === true : repo.active === false;
+  const visibilityFilter = (repo: RepoInfo) =>
+    visibility == "All" || !visibility ? true : repo.visibility == visibility.toLowerCase();
+  return activityFilter(repo) && visibilityFilter(repo);
 }

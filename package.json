@@ -2,7 +2,7 @@
   "name": "drone-ci",
   "displayName": "Drone CI",
   "description": "Manage your Drone CI servers easily",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "publisher": "maximtrp",
   "author": {
     "name": "Maksim Terpilovskii",
@@ -33,6 +33,77 @@
         }
       ]
     },
+    "configuration": [
+      {
+        "title": "Drone CI",
+        "properties": {
+          "drone-ci.filterRepos.byActivity": {
+            "type": "string",
+            "default": "All",
+            "description": "Defines which repositories to show in repositories view by activity status.",
+            "enum": [
+              "Active",
+              "Inactive",
+              "All"
+            ],
+            "enumDescriptions": [
+              "Show only active repositories",
+              "Show only inactive repositories",
+              "Show all repositories"
+            ]
+          },
+          "drone-ci.filterRepos.byVisibility": {
+            "type": "string",
+            "default": "All",
+            "markdownDescription": "Defines which repositories to show in repositories view by visibility status. \n* **Private** repositories are only accessible to people you explicitly share access with.\n* **Public** repositories are accessible to everyone on the internet.\n* **Internal** repositories are only accessible to authenticated users.",
+            "enum": [
+              "Public",
+              "Private",
+              "Internal",
+              "All"
+            ],
+            "enumDescriptions": [
+              "Show only public repositories",
+              "Show only private repositories",
+              "Show only internal repositories",
+              "Show all repositories"
+            ]
+          },
+          "drone-ci.sortRepos.order": {
+            "type": "string",
+            "default": "DESC",
+            "description": "Defines sorting order for repositories.",
+            "enum": [
+              "DESC",
+              "ASC"
+            ],
+            "enumDescriptions": [
+              "Descending",
+              "Ascending"
+            ]
+          },
+          "drone-ci.sortRepos.by": {
+            "type": "string",
+            "default": "Name",
+            "description": "Defines the field to sort repositories by.",
+            "enum": [
+              "Name",
+              "Activity",
+              "Visibility",
+              "Creation Date",
+              "Last Update"
+            ],
+            "enumDescriptions": [
+              "Sort repositories by their name",
+              "Sort repositories by their activity state",
+              "Sort repositories by their visibility",
+              "Sort repositories by their creation date",
+              "Sort repositories by their last update"
+            ]
+          }
+        }
+      }
+    ],
     "views": {
       "drone-ci": [
         {
@@ -41,7 +112,7 @@
         },
         {
           "id": "drone-ci-repos",
-          "name": "Repos"
+          "name": "Repositories"
         },
         {
           "id": "drone-ci-builds",
@@ -261,6 +332,66 @@
         "title": "Add a Cron Job",
         "icon": "$(add)",
         "enablement": "hasRepoSelected"
+      },
+      {
+        "command": "drone-ci.showActiveRepos",
+        "title": "Active Repositories",
+        "enablement": "config.drone-ci.filterRepos.byActivity != Active"
+      },
+      {
+        "command": "drone-ci.showInactiveRepos",
+        "title": "Inactive Repositories",
+        "enablement": "config.drone-ci.filterRepos.byActivity != Inactive"
+      },
+      {
+        "command": "drone-ci.showActiveAndInactiveRepos",
+        "title": "All Repositories",
+        "enablement": "config.drone-ci.filterRepos.byActivity != All"
+      },
+      {
+        "command": "drone-ci.showPublicRepos",
+        "title": "Public Repositories",
+        "enablement": "config.drone-ci.filterRepos.byVisibility != Public"
+      },
+      {
+        "command": "drone-ci.showPrivateRepos",
+        "title": "Private Repositories",
+        "enablement": "config.drone-ci.filterRepos.byVisibility != Private"
+      },
+      {
+        "command": "drone-ci.showInternalRepos",
+        "title": "Internal Repositories",
+        "enablement": "config.drone-ci.filterRepos.byVisibility != Internal"
+      },
+      {
+        "command": "drone-ci.showReposWithAnyVisibility",
+        "title": "All Repositories",
+        "enablement": "config.drone-ci.filterRepos.byVisibility != All"
+      },
+      {
+        "command": "drone-ci.sortReposByName",
+        "title": "Name",
+        "enablement": "config.drone-ci.sortRepos.by != Name"
+      },
+      {
+        "command": "drone-ci.sortReposByActivity",
+        "title": "Activity",
+        "enablement": "config.drone-ci.sortRepos.by != Activity"
+      },
+      {
+        "command": "drone-ci.sortReposByCreationDate",
+        "title": "Creation Date",
+        "enablement": "config.drone-ci.sortRepos.by != 'Creation Date'"
+      },
+      {
+        "command": "drone-ci.sortReposByLastUpdate",
+        "title": "Last Update",
+        "enablement": "config.drone-ci.sortRepos.by != 'Last Update'"
+      },
+      {
+        "command": "drone-ci.sortReposByVisibility",
+        "title": "Visibility",
+        "enablement": "config.drone-ci.sortRepos.by != Visibility"
       }
     ],
     "submenus": [
@@ -278,6 +409,28 @@
         "id": "drone-ci.repo",
         "label": "More",
         "icon": "$(more)"
+      },
+      {
+        "id": "drone-ci.filterRepos",
+        "label": "Filter",
+        "icon": "$(filter)"
+      },
+      {
+        "id": "drone-ci.filterRepos.filterBy",
+        "label": "Filter by",
+        "icon": "$(filter)"
+      },
+      {
+        "id": "drone-ci.filterRepos.byActivity",
+        "label": "Activity"
+      },
+      {
+        "id": "drone-ci.filterRepos.byVisibility",
+        "label": "Visibility"
+      },
+      {
+        "id": "drone-ci.filterRepos.sortBy",
+        "label": "Sort by"
       }
     ],
     "menus": {
@@ -330,6 +483,11 @@
         {
           "command": "drone-ci.gotoCronPage",
           "when": "view == drone-ci-cron",
+          "group": "navigation"
+        },
+        {
+          "submenu": "drone-ci.filterRepos",
+          "when": "view == drone-ci-repos",
           "group": "navigation"
         }
       ],
@@ -562,6 +720,75 @@
           "group": "destructive"
         }
       ],
+      "drone-ci.filterRepos.byActivity": [
+        {
+          "command": "drone-ci.showActiveRepos",
+          "group": "activity@1"
+        },
+        {
+          "command": "drone-ci.showInactiveRepos",
+          "group": "activity@2"
+        },
+        {
+          "command": "drone-ci.showActiveAndInactiveRepos",
+          "group": "activity@3"
+        }
+      ],
+      "drone-ci.filterRepos.byVisibility": [
+        {
+          "command": "drone-ci.showPublicRepos",
+          "group": "activity@1"
+        },
+        {
+          "command": "drone-ci.showPrivateRepos",
+          "group": "activity@2"
+        },
+        {
+          "command": "drone-ci.showInternalRepos",
+          "group": "activity@3"
+        },
+        {
+          "command": "drone-ci.showReposWithAnyVisibility",
+          "group": "activity@4"
+        }
+      ],
+      "drone-ci.filterRepos.sortBy": [
+        {
+          "command": "drone-ci.sortReposByName"
+        },
+        {
+          "command": "drone-ci.sortReposByActivity"
+        },
+        {
+          "command": "drone-ci.sortReposByCreationDate"
+        },
+        {
+          "command": "drone-ci.sortReposByLastUpdate"
+        },
+        {
+          "command": "drone-ci.sortReposByVisibility"
+        }
+      ],
+      "drone-ci.filterRepos": [
+        {
+          "submenu": "drone-ci.filterRepos.filterBy",
+          "when": "view == drone-ci-repos"
+        },
+        {
+          "submenu": "drone-ci.filterRepos.sortBy",
+          "when": "view == drone-ci-repos"
+        }
+      ],
+      "drone-ci.filterRepos.filterBy": [
+        {
+          "submenu": "drone-ci.filterRepos.byActivity",
+          "when": "view == drone-ci-repos"
+        },
+        {
+          "submenu": "drone-ci.filterRepos.byVisibility",
+          "when": "view == drone-ci-repos"
+        }
+      ],
       "commandPalette": [
         {
           "command": "drone-ci.editServer",
@@ -724,26 +951,26 @@
     "deploy": "vsce publish && ovsx publish"
   },
   "devDependencies": {
-    "@vscode/test-web": "^0.0.44",
+    "@vscode/test-web": "^0.0.47",
     "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
+    "@types/mocha": "^10.0.3",
     "@types/node": "16.x",
     "@types/vscode": "^1.60.0",
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
-    "@typescript-eslint/parser": "^6.4.0",
-    "ts-loader": "^9.4.4",
-    "eslint": "^8.47.0",
-    "glob": "^8.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "ts-loader": "^9.5.0",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.6",
-    "webpack": "^5.88.2",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4",
-    "assert": "^2.0.0",
+    "assert": "^2.1.0",
     "stream-http": "^3.2.0",
     "stream-browserify": "^3.0.0",
     "https-browserify": "^1.0.0",
     "browserify-zlib": "^0.2.0",
-    "url": "^0.11.1",
+    "url": "^0.11.3",
     "process": "^0.11.10"
   },
   "dependencies": {

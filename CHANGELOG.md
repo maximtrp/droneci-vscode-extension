@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.6.0 - 2023-10-26
+
+- Implemented sorting and filtering of repositories.
+- First server is autoselected on extension activation.
+
 ## 1.5.1 - 2023-08-31
 
 - Implemented autorefresh of repositories after server editing (if an edited server was selected).
