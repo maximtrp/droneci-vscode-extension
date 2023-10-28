@@ -9,7 +9,7 @@
 This extension integrates Drone CI into VS Code. It allows you to quickly browse and manage your repos, builds, secrets
 and cron jobs.
 
-![Screenshot](images/screenshot-main.png)
+<img src="images/screenshot-main.png" height="768" alt="Screenshot" />
 
 ## Features
 
