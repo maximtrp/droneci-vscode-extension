@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.6.1 - 2023-11-02
+
+- Server is deleted by its id, not label as earlier.
+
 ## 1.6.0 - 2023-10-26
 
 - Implemented sorting and filtering of repositories.

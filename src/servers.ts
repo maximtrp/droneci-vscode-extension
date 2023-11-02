@@ -127,7 +127,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
   }
 
   async deleteServer(serverDeleted: vscode.TreeItem) {
-    this.servers = this.servers.filter((server) => server.label !== serverDeleted.label);
+    this.servers = this.servers.filter((server) => server.id.toString() !== serverDeleted.id);
     await this.context.secrets.store("servers", JSON.stringify(this.servers));
     this.refresh();
   }
@@ -168,11 +168,13 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
 }
 
 export class Server extends vscode.TreeItem {
+  id: string;
   url: string;
   token: string;
 
   constructor(server: ServerInfo) {
     super(server.label, vscode.TreeItemCollapsibleState.None);
+    this.id = server.id.toString();
     this.url = server.url;
     this.tooltip = server.url;
     this.token = server.token;
