@@ -563,6 +563,11 @@
           "group": "inline"
         },
         {
+          "command": "drone-ci.cancelBuild",
+          "when": "view == drone-ci-builds && viewItem == build_running",
+          "group": "actions"
+        },
+        {
           "command": "drone-ci.restartBuild",
           "when": "view == drone-ci-builds && viewItem =~ /^build/",
           "group": "actions"
