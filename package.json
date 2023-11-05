@@ -116,8 +116,7 @@
         },
         {
           "id": "drone-ci-builds",
-          "name": "Builds",
-          "visibility": "collapsed"
+          "name": "Builds"
         },
         {
           "id": "drone-ci-cron",
