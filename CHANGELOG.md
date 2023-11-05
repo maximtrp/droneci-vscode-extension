@@ -1,8 +1,10 @@
 # Change Log
 
-## 1.6.1 - 2023-11-02
+## 1.6.1 - 2023-11-05
 
-- Server is deleted by its id, not label as earlier.
+- Added Cancel option to build context menu.
+- Improved server deletion.
+- Builds view is not collapsed by default now.
 
 ## 1.6.0 - 2023-10-26
 
