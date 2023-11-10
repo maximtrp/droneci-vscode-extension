@@ -19,10 +19,10 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     this.data = null;
   }
 
-  private _onDidChangeTreeData: vscode.EventEmitter<Secret | undefined | null | void> = new vscode.EventEmitter<
-    Secret | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<Secret | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<Secret | undefined | null | void> =
+    new vscode.EventEmitter<Secret | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<Secret | undefined | null | void> =
+    this._onDidChangeTreeData.event;
 
   async addSecret() {
     if (!this.client || !this.data) {
@@ -122,6 +122,7 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
     this.client = null;
     this.data = null;
     this.refresh();
+    return this;
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -145,10 +146,14 @@ export class SecretsProvider implements vscode.TreeDataProvider<Secret | None> {
   gotoSecretsPage() {
     if (this.client && this.data) {
       vscode.env.openExternal(
-        vscode.Uri.parse(`${this.client._axios.defaults.baseURL}/${this.data.owner}/${this.data.repo}/settings/secrets`)
+        vscode.Uri.parse(
+          `${this.client._axios.defaults.baseURL}/${this.data.owner}/${this.data.repo}/settings/secrets`
+        )
       );
     } else {
-      vscode.window.showInformationMessage("Please select Drone server and repository to view secrets");
+      vscode.window.showInformationMessage(
+        "Please select Drone server and repository to view secrets"
+      );
     }
   }
 }

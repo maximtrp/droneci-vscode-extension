@@ -85,10 +85,10 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
 
   constructor() {}
 
-  private _onDidChangeTreeData: vscode.EventEmitter<Build | undefined | null | void> = new vscode.EventEmitter<
-    Build | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<Build | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<Build | undefined | null | void> =
+    new vscode.EventEmitter<Build | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<Build | undefined | null | void> =
+    this._onDidChangeTreeData.event;
 
   refresh() {
     this._onDidChangeTreeData.fire();
@@ -112,6 +112,7 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
     this.client = null;
     this.data = null;
     this.refresh();
+    return this;
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -181,7 +182,11 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         this.builds = [];
       }
       try {
-        const builds: BuildInfo[] = await this.client.getBuilds(this.data.owner, this.data.repo, page);
+        const builds: BuildInfo[] = await this.client.getBuilds(
+          this.data.owner,
+          this.data.repo,
+          page
+        );
         if (builds.length > 0) {
           this.page = page;
           this.recentPageSuccess = builds.length < 25 ? false : true;
@@ -203,7 +208,13 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
 
   async getStepLog(step: Step): Promise<string | undefined> {
     try {
-      const logs = await this.client.getLogs(this.data?.owner, this.data?.repo, step.build, step.stage, step.step);
+      const logs = await this.client.getLogs(
+        this.data?.owner,
+        this.data?.repo,
+        step.build,
+        step.stage,
+        step.step
+      );
       return logs.map((log: Log) => log.out).join("");
     } catch (error) {
       return undefined;
@@ -247,7 +258,9 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         await this.client.cancelBuild(this.data.owner, this.data.repo, build.number);
         this.refresh();
       } catch (error: any) {
-        vscode.window.showWarningMessage(`Build ${build.number} was not cancelled. ${error.message}`);
+        vscode.window.showWarningMessage(
+          `Build ${build.number} was not cancelled. ${error.message}`
+        );
       }
     }
   }
@@ -312,7 +325,9 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
         }
       }
     } else {
-      vscode.window.showInformationMessage(`Please select Drone CI server and repository to trigger build`);
+      vscode.window.showInformationMessage(
+        `Please select Drone CI server and repository to trigger build`
+      );
     }
   }
 
@@ -343,13 +358,21 @@ export class BuildsProvider implements vscode.TreeDataProvider<Build | Step | No
       }
 
       try {
-        await this.client.promoteBuild(this.data.owner, this.data.repo, build.number, target, params);
+        await this.client.promoteBuild(
+          this.data.owner,
+          this.data.repo,
+          build.number,
+          target,
+          params
+        );
         this.refresh();
       } catch (e) {
         vscode.window.showWarningMessage("Build was not promoted");
       }
     } else {
-      vscode.window.showInformationMessage(`Please select Drone CI server and repository to trigger build`);
+      vscode.window.showInformationMessage(
+        `Please select Drone CI server and repository to trigger build`
+      );
     }
   }
 }

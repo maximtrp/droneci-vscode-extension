@@ -28,15 +28,6 @@ export function activate(context: vscode.ExtensionContext) {
     treeDataProvider: serversProvider,
   });
 
-  // Auto-selecting first Drone server
-  (async () => {
-    const servers = await serversProvider.getServers();
-    if (servers[0] instanceof Server) {
-      serversTree.reveal(servers[0], { select: true, focus: true });
-      vscode.commands.executeCommand("setContext", "hasServerSelected", true);
-    }
-  })();
-
   serversTree.onDidChangeSelection(
     async (serversView: vscode.TreeViewSelectionChangeEvent<Server>) => {
       if (serversView.selection.length > 0) {
@@ -44,7 +35,10 @@ export function activate(context: vscode.ExtensionContext) {
           url: serversView.selection[0].url,
           token: serversView.selection[0].token,
         });
-        reposProvider.setClient(droneClient).refresh();
+        reposProvider.reset().setClient(droneClient).refresh();
+        buildsProvider.reset().setClient(droneClient).refresh();
+        secretsProvider.reset().setClient(droneClient).refresh();
+        cronsProvider.reset().setClient(droneClient).refresh();
         vscode.commands.executeCommand("setContext", "hasRepoSelected", false);
 
         const repos = await reposProvider.getChildren();
@@ -59,6 +53,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   );
+
+  serversProvider.getServers().then(() => {
+    const server = serversProvider.getFirst();
+    if (server) {
+      serversTree.reveal(server, { select: true, focus: true });
+      vscode.commands.executeCommand("setContext", "hasServerSelected", true);
+    }
+  });
 
   const reposTree = vscode.window.createTreeView("drone-ci-repos", {
     treeDataProvider: reposProvider,
@@ -86,9 +88,15 @@ export function activate(context: vscode.ExtensionContext) {
   const commandEditSecret = vscode.commands.registerCommand("drone-ci.editSecret", (secret) =>
     secretsProvider.editSecret(secret)
   );
-  const commandAddServer = vscode.commands.registerCommand("drone-ci.addServer", () =>
-    serversProvider.addServer()
-  );
+  const commandAddServer = vscode.commands.registerCommand("drone-ci.addServer", async () => {
+    await serversProvider.addServer();
+    if (serversTree.selection.length == 0) {
+      const server = serversProvider.getLast();
+      if (server) {
+        serversTree.reveal(server, { select: true, focus: true });
+      }
+    }
+  });
   const commandEditServer = vscode.commands.registerCommand(
     "drone-ci.editServer",
     async (server) => {
@@ -100,7 +108,10 @@ export function activate(context: vscode.ExtensionContext) {
           url: serverNew.url,
           token: serverNew.token,
         });
-        reposProvider.setClient(droneClient).refresh();
+        reposProvider.reset().setClient(droneClient).refresh();
+        buildsProvider.reset().setClient(droneClient).refresh();
+        secretsProvider.reset().setClient(droneClient).refresh();
+        cronsProvider.reset().setClient(droneClient).refresh();
       }
     }
   );

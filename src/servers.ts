@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 interface ServerInfo {
-  id: number;
+  id: string;
   url: string;
   token: string;
   label: string;
@@ -40,8 +40,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       ignoreFocusOut: true,
     });
 
-    const servers: ServerInfo[] = JSON.parse((await this.context.secrets.get("servers")) || "[]");
-    const serverExists = servers.find((server) => server.url === url);
+    const serverExists = this.servers.find((server) => server.url === url);
     if (serverExists) {
       vscode.window.showErrorMessage("Server with this URL already exists");
       return;
@@ -59,21 +58,19 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     }
 
     const server: ServerInfo = {
-      id: this.servers.length,
+      id: this.servers.length.toString(),
       url: url.replace(/\/+$/, ""),
       token: token,
       label: label || url.replace("https://", ""),
     };
-    servers.push(server);
+    this.servers.push(server);
 
-    await this.context.secrets.store("servers", JSON.stringify(servers));
+    await this.context.secrets.store("servers", JSON.stringify(this.servers));
     vscode.window.showInformationMessage(`You have successfully added a Drone CI server`);
     this.refresh();
   }
 
   async editServer(server: Server): Promise<ServerInfo | undefined> {
-    let servers: ServerInfo[] = [];
-
     const url = (
       (await vscode.window.showInputBox({
         placeHolder: "https://drone.domain.name",
@@ -87,11 +84,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       vscode.window.showWarningMessage(`You have not entered Drone CI server address`);
       return;
     } else {
-      servers = JSON.parse((await this.context.secrets.get("servers")) || "[]").filter(
-        (existingServer: ServerInfo) => existingServer.url !== server.url
-      );
-
-      const serverExists = servers.find((server) => server.url === url);
+      const serverExists = this.servers.find((server) => server.url === url);
       if (serverExists) {
         vscode.window.showErrorMessage("Server with this URL already exists");
         return;
@@ -113,14 +106,15 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       })) || server.token;
 
     const serverNew: ServerInfo = {
-      id: this.servers.length,
+      id: this.servers.length.toString(),
       url: url,
       token: token,
       label: label || url.replace("https://", ""),
     };
-    servers.push(serverNew);
+    this.servers = this.servers.filter((existingServer) => existingServer.id != server.id);
+    this.servers.push(serverNew);
 
-    await this.context.secrets.store("servers", JSON.stringify(servers));
+    await this.context.secrets.store("servers", JSON.stringify(this.servers));
     vscode.window.showInformationMessage(`You have successfully updated your Drone CI server`);
     this.refresh();
     return serverNew;
@@ -137,10 +131,15 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
   }
 
   async getChildren(): Promise<Server[]> {
-    return await this.getServers();
+    if (this.servers.length > 0) {
+      return this.servers.map((s) => new Server(s));
+    } else {
+      vscode.commands.executeCommand("setContext", "hasServerSelected", false);
+      return [];
+    }
   }
 
-  getFirst(): vscode.TreeItem | null {
+  getFirst(): Server | null {
     if (this.servers.length > 0) {
       return new Server(this.servers[0]);
     } else {
@@ -148,14 +147,17 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     }
   }
 
-  async getServers(): Promise<Server[]> {
-    this.servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+  getLast(): Server | null {
     if (this.servers.length > 0) {
-      return this.servers.map((s) => new Server(s));
+      return new Server(this.servers[this.servers.length - 1]);
     } else {
-      vscode.commands.executeCommand("setContext", "hasServerSelected", false);
-      return [];
+      return null;
     }
+  }
+
+  async getServers(): Promise<void> {
+    this.servers = JSON.parse((await this.context.secrets.get("servers")) || "[]");
+    this._onDidChangeTreeData.fire();
   }
 
   getParent() {

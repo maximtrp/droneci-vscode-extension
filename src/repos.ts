@@ -39,6 +39,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   reset() {
     this.client = null;
     this.refresh();
+    return this;
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -195,7 +196,11 @@ function filterReposBy(
   { activity, visibility }: { activity: string | null; visibility: string | null }
 ) {
   const activityFilter = (repo: RepoInfo) =>
-    activity == "All" ? true : activity == "Active" ? repo.active === true : repo.active === false;
+    activity == "Active"
+      ? repo.active === true
+      : activity == "Inactive"
+      ? repo.active === false
+      : true;
   const visibilityFilter = (repo: RepoInfo) =>
     visibility == "All" || !visibility ? true : repo.visibility == visibility.toLowerCase();
   return activityFilter(repo) && visibilityFilter(repo);

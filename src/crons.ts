@@ -24,10 +24,10 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
     this.data = null;
   }
 
-  private _onDidChangeTreeData: vscode.EventEmitter<Cron | undefined | null | void> = new vscode.EventEmitter<
-    Cron | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<Cron | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<Cron | undefined | null | void> =
+    new vscode.EventEmitter<Cron | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<Cron | undefined | null | void> =
+    this._onDidChangeTreeData.event;
 
   refresh() {
     this._onDidChangeTreeData.fire();
@@ -51,6 +51,7 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
     this.client = null;
     this.data = null;
     this.refresh();
+    return this;
   }
 
   getTreeItem(element: vscode.TreeItem) {
@@ -79,10 +80,14 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
   gotoCronPage() {
     if (this.client && this.data) {
       vscode.env.openExternal(
-        vscode.Uri.parse(`${this.client._axios.defaults.baseURL}/${this.data.owner}/${this.data.repo}/settings/cron`)
+        vscode.Uri.parse(
+          `${this.client._axios.defaults.baseURL}/${this.data.owner}/${this.data.repo}/settings/cron`
+        )
       );
     } else {
-      vscode.window.showInformationMessage("Please select Drone server and repository to view cron jobs");
+      vscode.window.showInformationMessage(
+        "Please select Drone server and repository to view cron jobs"
+      );
     }
   }
 

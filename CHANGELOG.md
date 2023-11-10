@@ -1,5 +1,12 @@
 # Change Log
 
+## 2.0.0 - 2023-11-10
+
+- Refactored server operations (add, edit, delete, select).
+- Fixed server autoselection on extension load.
+- Fixed default repo filters behavior.
+- Fixed other minor errors.
+
 ## 1.6.1 - 2023-11-05
 
 - Added Cancel option to build context menu.
