@@ -83,12 +83,6 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
     if (!url) {
       vscode.window.showWarningMessage(`You have not entered Drone CI server address`);
       return;
-    } else {
-      const serverExists = this.servers.find((server) => server.url === url);
-      if (serverExists) {
-        vscode.window.showErrorMessage("Server with this URL already exists");
-        return;
-      }
     }
 
     const label = await vscode.window.showInputBox({
@@ -106,7 +100,7 @@ export class ServersProvider implements vscode.TreeDataProvider<Server> {
       })) || server.token;
 
     const serverNew: ServerInfo = {
-      id: this.servers.length.toString(),
+      id: server.id,
       url: url,
       token: token,
       label: label || url.replace("https://", ""),

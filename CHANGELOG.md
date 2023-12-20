@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.0.1 - 2023-12-20
+
+- Editing server details is now possible.
+- Replaced `getRepos` API call with `selfRepos`. This should fix the extension behavior with restricted Drone CI setups.
+
 ## 2.0.0 - 2023-11-10
 
 - Refactored server operations (add, edit, delete, select).

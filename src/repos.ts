@@ -51,7 +51,7 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
       let repos: RepoInfo[] = [];
 
       try {
-        repos = (await this.client.getRepos()) || [];
+        repos = (await this.client.selfRepos()) || [];
         if (repos.length > 0) {
           const sortField: string =
             vscode.workspace.getConfiguration("drone-ci.sortRepos").get("by") || "Name";
