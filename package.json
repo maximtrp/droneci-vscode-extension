@@ -955,7 +955,7 @@
     "deploy": "vsce publish && ovsx publish"
   },
   "devDependencies": {
-    "@vscode/test-web": "^0.0.47",
+    "@vscode/test-web": "^0.0.51",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "16.x",
