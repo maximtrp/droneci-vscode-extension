@@ -22,6 +22,12 @@ and cron jobs.
 
 This extension is available on the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=maximtrp.drone-ci) for Visual Studio Code and [Open VSX Registry](https://open-vsx.org/extension/maximtrp/drone-ci).
 
+## Donate
+
+If you find this extension useful, please consider donating any amount of money. This will help me spend more time on supporting open-source software.
+
+<a href="https://www.buymeacoffee.com/maximtrp" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 ## Copyright
 
 [Drone CI](https://www.drone.io/) [icon and logo](resources/) by [Harness Inc.](https://www.harness.io/) are licensed under [CC BY-NC-ND 4.0](https://github.com/drone/brand/blob/master/LICENSE).
