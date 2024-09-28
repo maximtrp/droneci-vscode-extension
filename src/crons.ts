@@ -189,6 +189,7 @@ export class CronsProvider implements vscode.TreeDataProvider<Cron | None> {
     if (this.data) {
       try {
         await this.client.executeCron(this.data.owner, this.data.repo, cron.name);
+        vscode.window.showWarningMessage("Cron job was triggered successfully");
         this.refresh();
       } catch (error: any) {
         vscode.window.showWarningMessage(
