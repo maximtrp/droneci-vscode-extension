@@ -269,6 +269,14 @@ export function activate(context: vscode.ExtensionContext) {
   );
   // vscode.commands.registerCommand("drone-ci.updateRepo", (repo) => reposProvider.updateRepo(repo));
 
+
+  const commandToggleWorkspaceOnly = vscode.commands.registerCommand(
+    "drone-ci.toggleWorkspaceRepos",
+    async () => {
+      await setConfiguration("drone-ci.filterRepos.byWorkspace", await getConfiguration("drone-ci.filterRepos.byWorkspace") ? false : true);
+      reposProvider.refresh();
+    }
+  );
   const commandShowActiveRepos = vscode.commands.registerCommand(
     "drone-ci.showActiveRepos",
     async () => {
@@ -361,6 +369,7 @@ export function activate(context: vscode.ExtensionContext) {
       "drone-ci.sortRepos.order",
       "drone-ci.filterRepos.byActivity",
       "drone-ci.filterRepos.byVisibility",
+      "drone-ci.filterRepos.byWorkspace",
     ].map((setting) => event.affectsConfiguration(setting));
     if (affectedSettings.some((affected) => affected)) {
       reposProvider.refresh();
@@ -409,6 +418,7 @@ export function activate(context: vscode.ExtensionContext) {
       commandDeleteSecret,
       commandDeleteCron,
       commandTriggerCron,
+      commandToggleWorkspaceOnly,
       commandShowActiveRepos,
       commandShowInactiveRepos,
       commandShowActiveAndInactiveRepos,
@@ -425,6 +435,10 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-async function setConfiguration(field: string, value: string) {
+async function setConfiguration(field: string, value: string | boolean) {
   await vscode.workspace.getConfiguration().update(field, value, vscode.ConfigurationTarget.Global);
+}
+
+async function getConfiguration(field: string) {
+  return await vscode.workspace.getConfiguration().get(field, vscode.ConfigurationTarget.Global);
 }

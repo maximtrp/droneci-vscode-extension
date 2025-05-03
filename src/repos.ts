@@ -18,7 +18,7 @@ interface RepoInfo {
 export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   private client: any;
 
-  constructor() {}
+  constructor(){}
 
   private _onDidChangeTreeData: vscode.EventEmitter<Repo | undefined | null | void> =
     new vscode.EventEmitter<Repo | undefined | null | void>();
@@ -45,6 +45,32 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
   getTreeItem(element: vscode.TreeItem) {
     return element;
   }
+  
+  isRepoInWorkspace(repo: RepoInfo): boolean {
+    const gitExtension = vscode.extensions.getExtension("vscode.git");
+    if (gitExtension) {
+      const git = gitExtension.exports.getAPI(1);
+      const repos = git.repositories;
+      for (const repository of repos) {
+        if (repository.state.remotes.some((remote: { fetchUrl: string; }) => {
+            const repoPath = new URL(repo.link || "").pathname.split("/").slice(-2).join("/");
+            const remotePath = new URL(remote.fetchUrl || "").pathname.split("/").slice(-2).join("/");
+            if (repoPath === remotePath) {
+              console.log("repoPath", repoPath);
+              console.log("remotePath", remotePath);
+              return true;
+            }
+            return false;
+        })) {
+          return true;
+        }
+        if (repository.rootUri.toString() === repo.link || repository.state.submodules.some((sub: { url: string | undefined; }) => sub.url === repo.link)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   async getChildren(): Promise<Repo[] | None[]> {
     if (this.client) {
@@ -61,11 +87,16 @@ export class ReposProvider implements vscode.TreeDataProvider<Repo> {
             vscode.workspace.getConfiguration("drone-ci.filterRepos").get("byActivity") || null;
           const visibilityFilter: string | null =
             vscode.workspace.getConfiguration("drone-ci.filterRepos").get("byVisibility") || null;
-          repos = repos
-            .filter((repo) =>
-              filterReposBy(repo, { activity: activityFilter, visibility: visibilityFilter })
+          const workspaceFilter: string | null =
+            vscode.workspace.getConfiguration("drone-ci.filterRepos").get("byWorkspace") || null;
+            repos = repos
+            .filter(
+              (repo) =>
+              filterReposBy(repo, { activity: activityFilter, visibility: visibilityFilter }) &&
+              (!!workspaceFilter || this.isRepoInWorkspace(repo))
             )
             .sort(sortReposBy(sortField, order == "DESC" ? -1 : 1));
+            console.log("repos", repos);
 
           return repos.map(
             (repo) =>

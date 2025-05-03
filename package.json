@@ -69,6 +69,11 @@
               "Show all repositories"
             ]
           },
+          "drone-ci.filterRepos.byWorkspace": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Defines whether to show repositories by workspace. \n* **true** - Show repositories by workspace.\n* **false** - Show all repositories."
+          },
           "drone-ci.sortRepos.order": {
             "type": "string",
             "default": "DESC",
@@ -346,6 +351,10 @@
         "command": "drone-ci.showActiveAndInactiveRepos",
         "title": "All Repositories",
         "enablement": "config.drone-ci.filterRepos.byActivity != All"
+      },
+      {
+        "command": "drone-ci.toggleWorkspaceRepos",
+        "title": "Toggle 'in Workspace only'"
       },
       {
         "command": "drone-ci.showPublicRepos",
@@ -780,6 +789,12 @@
         },
         {
           "submenu": "drone-ci.filterRepos.sortBy",
+          "when": "view == drone-ci-repos"
+        },
+        {
+          "command": "drone-ci.toggleWorkspaceRepos",
+          "group": "toggle",
+          "checked": "drone-ci.filterRepos.byWorkspace",
           "when": "view == drone-ci-repos"
         }
       ],
